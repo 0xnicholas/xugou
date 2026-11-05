@@ -1,10 +1,14 @@
 # Agent Guide
 
+## Project name
+
+The project is `xugou` (lowercase in slugs, URLs, and identifiers), with the Chinese display name 序构 AI.
+
 ## Agent skills
 
 ### Issue tracker
 
-Issues live in this repo's GitHub Issues (`0xnicholas/agent707`), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in this repo's GitHub Issues (`0xnicholas/xugou`), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
