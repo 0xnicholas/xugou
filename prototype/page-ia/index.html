@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原型 · 页面信息架构与逐屏大纲 · 序构 AI</title>
+<style>
+  :root {
+    --ink: #181816;
+    --muted: #6d6a63;
+    --line: #d8d4cb;
+    --line-strong: #a9a49a;
+    --paper: #ffffff;
+    --wash: #f6f4ef;
+    --note: #fff6bf;
+    --note-line: #c9a227;
+    --proto: #1e1e1e;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    background: #e9e6df;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  button { font: inherit; cursor: pointer; }
+  a { color: inherit; }
+  h1, h2, h3, p { margin-top: 0; }
+  .proto-ribbon {
+    position: absolute; top: 12px; left: 12px; z-index: 1000;
+    background: var(--proto); color: #fff;
+    font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em; padding: 6px 10px; border-radius: 2px;
+  }
+  .proto-brief {
+    max-width: 1040px; margin: 56px auto 0; background: #fff;
+    border: 1px dashed var(--line-strong); padding: 14px 20px;
+    font-size: 14px; position: relative; z-index: 2;
+  }
+  .proto-brief summary {
+    cursor: pointer; font-weight: 750; letter-spacing: .01em;
+    font-size: 14px; color: var(--ink);
+  }
+  .proto-brief[open] summary { margin-bottom: 14px; }
+  .brief-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;
+    color: #3e3c37;
+  }
+  .brief-grid h3 { font-size: 13px; margin: 0 0 8px; letter-spacing: .02em; }
+  .brief-grid ol { padding-left: 18px; margin: 0; }
+  .brief-grid p { margin: 0 0 8px; }
+  .brief-grid .micro { font-size: 12px; color: var(--muted); }
+  .brief-table-wrap { overflow-x: auto; margin-top: 16px; }
+  .brief-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 640px; }
+  .brief-table th, .brief-table td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .brief-table th { background: var(--wash); font-weight: 650; }
+  .stage { max-width: 960px; margin: 20px auto 130px; }
+  .site { background: var(--paper); border: 1px solid var(--line); }
+  .variant { display: none; position: relative; }
+  .variant.active { display: block; }
+  .variant-meta {
+    border: 1px dashed var(--line-strong); background: #fff;
+    padding: 12px 16px; margin-bottom: 14px; font-size: 12px;
+    display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline;
+  }
+  .variant-meta b {
+    font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  .chosen-tag {
+    display: inline-block; background: var(--ink); color: #fff;
+    font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .06em; padding: 2px 6px; margin-left: 6px; vertical-align: 2px;
+  }
+  .variant-meta span { color: #4b4841; }
+  .variant-meta .bet { color: var(--muted); flex-basis: 100%; }
+  .nav {
+    display: flex; align-items: center; gap: 22px;
+    padding: 16px 32px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: #fff; z-index: 20;
+  }
+  .brand { font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+  .nav-links {
+    display: flex; gap: 18px; margin-left: auto;
+    font-size: 13px; color: var(--muted);
+  }
+  .nav-links a, .nav-links button {
+    text-decoration: none; border: 0; background: transparent; padding: 4px 0; color: inherit;
+  }
+  .nav .btn { margin-left: 4px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 46px; padding: 0 22px; border-radius: 3px;
+    border: 1px solid var(--ink); background: var(--ink); color: #fff;
+    font-weight: 650; font-size: 15px; text-decoration: none; white-space: nowrap;
+  }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--line-strong); font-weight: 500; }
+  .btn.small { min-height: 36px; padding: 0 14px; font-size: 13px; }
+  .sec { border-bottom: 1px solid var(--line); position: relative; }
+  .sec:last-of-type { border-bottom: 0; }
+  .wrap { padding: 64px 32px; }
+  .split { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+  .eyebrow {
+    font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+    margin: 0 0 12px;
+  }
+  h1 { font-size: clamp(34px, 4.2vw, 54px); line-height: 1.14; letter-spacing: -.02em; margin: 0 0 20px; }
+  h2 { font-size: clamp(24px, 2.6vw, 34px); line-height: 1.28; letter-spacing: -.01em; margin: 0 0 14px; }
+  h3 { font-size: 18px; line-height: 1.45; margin: 0 0 8px; }
+  .lede { font-size: 17px; line-height: 1.75; color: #3e3c37; max-width: 64ch; margin: 0 0 24px; }
+  .micro { font-size: 12px; line-height: 1.6; color: var(--muted); }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 26px 0 12px; }
+  .hero .wrap { padding-top: 70px; padding-bottom: 52px; }
+  .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 44px; align-items: center; }
+  .trust { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); margin-top: 40px; }
+  .trust div { padding: 16px 20px 0 0; font-size: 12px; color: #46433d; line-height: 1.6; }
+  .trust b {
+    display: block; font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em; color: var(--muted); margin-bottom: 3px; text-transform: uppercase;
+  }
+  .ph {
+    border: 1px dashed var(--line-strong);
+    background: repeating-linear-gradient(135deg, #faf9f6, #faf9f6 8px, #f2f0eb 8px, #f2f0eb 9px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; color: var(--muted); font-size: 12px; line-height: 1.7; padding: 16px;
+  }
+  .ph span { font-size: 11px; color: #8a857a; }
+  .hero-visual { min-height: 330px; }
+  .grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .grid4 article { background: #fff; padding: 22px; }
+  .grid4 p { margin: 0; font-size: 13px; color: #4b4841; }
+  .checklist { list-style: none; padding: 0; margin: 0 0 24px; }
+  .checklist li { position: relative; padding-left: 22px; margin: 0 0 9px; font-size: 14px; color: #3e3c37; }
+  .checklist li::before { content: "—"; position: absolute; left: 0; color: var(--line-strong); }
+  .sample-card { border: 1px solid var(--line); padding: 18px; background: #fff; }
+  .sample-card .ph { min-height: 150px; margin-bottom: 16px; }
+  .sample-card p { font-size: 13px; color: #4b4841; }
+  .sample-card .micro { margin-bottom: 0; }
+  .method { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .method > div { border: 1px solid var(--line); padding: 18px; background: #fff; }
+  .method p { margin: 0; font-size: 13px; color: #4b4841; }
+  .stepnum {
+    display: inline-block; font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em; color: var(--muted); margin-bottom: 10px;
+  }
+  .method-ph { min-height: 220px; }
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .phases > div { background: #fff; padding: 20px; }
+  .phases p { font-size: 13px; color: #4b4841; margin: 0 0 8px; }
+  .phases .micro { margin: 0; }
+  .callout { border-left: 3px solid var(--ink); background: var(--wash); padding: 18px 20px; margin: 24px 0; font-size: 14px; }
+  .callout p { margin: 6px 0 0; }
+  .callout .micro { margin: 8px 0 0; }
+  .demo-ph { min-height: 110px; margin-top: 20px; }
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .cards-offer { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card { border: 1px solid var(--line); padding: 22px; display: flex; flex-direction: column; gap: 9px; background: #fff; }
+  .card p { margin: 0; font-size: 13px; color: #4b4841; }
+  .card .price { font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+  .card ul { padding-left: 17px; margin: 0; font-size: 12px; color: #4b4841; }
+  .card li { margin-bottom: 4px; }
+  .card .btn { margin-top: auto; align-self: flex-start; }
+  .card-tag {
+    display: inline-block; align-self: flex-start; font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    border: 1px solid var(--line); padding: 2px 6px;
+  }
+  .footnote { font-size: 12px; color: var(--muted); line-height: 1.7; margin: 18px 0 0; }
+  .faq details { border-top: 1px solid var(--line); padding: 15px 0; }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { font-weight: 650; cursor: pointer; list-style: none; font-size: 15px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; float: right; color: var(--muted); font-weight: 400; }
+  .faq details[open] summary::after { content: "−"; }
+  .faq details p { margin: 10px 0 0; color: #45423c; font-size: 14px; max-width: 75ch; }
+  .band { background: var(--wash); }
+  .foot { padding: 26px 32px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .anno { display: none; }
+  body.notes .anno {
+    display: block; position: absolute; left: -226px; top: 58px; width: 212px;
+    padding: 11px 13px; background: var(--note); border: 1px dashed var(--note-line);
+    font-size: 11.5px; line-height: 1.55; color: #4a3d00; z-index: 5;
+  }
+  body.notes .anno b { display: block; margin-bottom: 4px; font-size: 11.5px; }
+  body.notes .anno p { margin: 4px 0; }
+  .anno-kicker {
+    display: inline-block; font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em; text-transform: uppercase; background: #00000012;
+    padding: 2px 5px; margin-bottom: 6px;
+  }
+  .fold-line {
+    display: none; position: absolute; left: 0; right: 0; top: 844px;
+    border-top: 2px dashed #c0392b; z-index: 15; pointer-events: none;
+  }
+  .fold-line span {
+    position: absolute; right: 8px; top: -23px; background: #c0392b; color: #fff;
+    font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 4px 6px;
+  }
+  body.show-fold .variant.active .fold-line { display: block; }
+  .proto-subnav {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--proto); color: #fff; padding: 9px 14px;
+    font-size: 12px; margin-bottom: 0;
+  }
+  .proto-subnav .subnav-label { color: #aaa; font: 600 10px/1.4 ui-monospace, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .proto-subnav button {
+    background: transparent; color: #bbb; border: 1px solid #555;
+    padding: 4px 10px; font-size: 12px; border-radius: 2px;
+  }
+  .proto-subnav button.active { background: #fff; color: #111; border-color: #fff; }
+  .proto-subnav .subnav-hint { color: #888; margin-left: auto; font-size: 11px; }
+  .page[hidden] { display: none !important; }
+  .triage { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 22px 0 12px; }
+  .triage button {
+    text-align: left; border: 1px solid var(--line-strong); background: #fff;
+    padding: 15px 16px; font-size: 14px; line-height: 1.55; color: var(--ink);
+  }
+  .triage button.selected { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--wash); }
+  .triage-result {
+    border-left: 3px solid var(--ink); padding: 11px 15px; background: var(--wash);
+    font-size: 13.5px; min-height: 58px; color: #3e3c37;
+  }
+  .price-table-wrap { overflow-x: auto; }
+  .price-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 680px; }
+  .price-table th, .price-table td { border: 1px solid var(--line); padding: 12px; text-align: left; vertical-align: top; color: #3e3c37; }
+  .price-table th { background: var(--wash); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .price-table td b { color: var(--ink); }
+  .c-rail { display: none; }
+  body[data-variant="C"].c-scrolled .c-rail {
+    display: block; position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
+    width: 190px; background: #fff; border: 1px solid var(--ink); padding: 16px; z-index: 40;
+    box-shadow: 0 8px 24px #00000014;
+  }
+  .c-rail h3 { font-size: 16px; margin-bottom: 6px; }
+  .c-rail .micro { margin-bottom: 12px; }
+  .c-sticky { display: none; }
+  body.dialog-open .c-rail, body.dialog-open .c-sticky { display: none !important; }
+  @media (max-width: 1400px) {
+    body.notes .anno {
+      position: static; width: auto; margin: 0; border-left: 0; border-right: 0; border-top: 0;
+      padding: 10px 20px;
+    }
+    body.notes .anno b, body.notes .anno p { display: inline; margin-right: 8px; }
+    body.notes .anno p { display: inline-block; }
+  }
+  @media (max-width: 1400px) {
+    body[data-variant="C"].c-scrolled .c-rail { display: none; }
+  }
+  @media (max-width: 900px) {
+    .brief-grid { grid-template-columns: 1fr; gap: 16px; }
+  }
+  @media (max-width: 760px) {
+    .stage { margin-top: 12px; margin-bottom: 110px; }
+    .proto-brief { margin: 48px 10px 0; padding: 12px 14px; }
+    .nav { padding: 12px 20px; gap: 12px; }
+    .nav-links { display: none; }
+    .nav .btn { margin-left: auto; }
+    .wrap { padding: 40px 20px; }
+    .hero .wrap { padding-top: 40px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 28px; }
+    .hero-visual { min-height: 210px; }
+    h1 { font-size: 34px; }
+    .lede { font-size: 16px; }
+    .trust { grid-template-columns: 1fr; }
+    .trust div { padding: 10px 0 0; }
+    .split { grid-template-columns: 1fr; gap: 28px; }
+    .grid4 { grid-template-columns: 1fr; }
+    .method, .phases, .cards3, .cards-offer, .triage { grid-template-columns: 1fr; }
+    .triage { gap: 8px; }
+    .proto-subnav { flex-wrap: wrap; }
+    .proto-subnav .subnav-hint { flex-basis: 100%; margin-left: 0; }
+    body[data-variant="C"].c-scrolled .c-sticky {
+      display: flex; position: fixed; left: 0; right: 0; bottom: 64px;
+      align-items: center; justify-content: space-between; gap: 12px;
+      padding: 9px 14px; background: #fff; border-top: 1px solid var(--line);
+      z-index: 45; font-size: 12px; line-height: 1.4;
+    }
+  }
+  @media print {
+    .proto-ribbon, .proto-bar, .proto-brief, .variant-meta, .anno, .fold-line, .c-rail, .c-sticky { display: none !important; }
+    .stage { max-width: none; margin: 0; }
+    .variant { display: block !important; page-break-before: always; }
+    body { background: #fff; }
+  }
+  .proto-bar {
+    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px; background: var(--proto); color: #fff;
+    padding: 8px 10px; border-radius: 999px; z-index: 1000;
+    box-shadow: 0 8px 30px #00000040; font-size: 13px;
+  }
+  .proto-bar button { background: transparent; color: #fff; border: 0; padding: 6px 8px; border-radius: 999px; }
+  .proto-bar .bar-label { min-width: 175px; text-align: center; white-space: nowrap; }
+  .proto-bar .bar-label b { font-family: ui-monospace, Menlo, monospace; }
+  .proto-bar .bar-toggle { border: 1px solid #555; border-radius: 999px; padding: 5px 10px; font-size: 11px; color: #ccc; }
+  .proto-bar .bar-toggle[aria-pressed="true"] { background: #fff; color: #111; border-color: #fff; }
+  .proto-bar .bar-divider { width: 1px; height: 20px; background: #444; margin: 0 2px; }
+  @media (max-width: 760px) {
+    .proto-bar { bottom: 8px; padding: 6px 8px; gap: 2px; }
+    .proto-bar .bar-label { min-width: 140px; font-size: 11px; }
+  }
+  @media (max-width: 480px) {
+    .proto-bar .bar-label { min-width: 118px; }
+    .proto-bar .bar-toggle, .proto-bar .bar-divider { display: none; }
+  }
+  dialog#ctaDialog { border: 1px solid var(--ink); padding: 0; max-width: 440px; width: calc(100% - 32px); background: #fff; }
+  dialog#ctaDialog::backdrop { background: #00000055; }
+  .dialog-inner { padding: 24px; }
+  .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .dialog-head h3 { margin: 0; }
+  .dialog-close { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 0 4px; color: var(--muted); }
+  .qr {
+    width: 164px; height: 164px; border: 1px dashed var(--line-strong);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: 12px; color: var(--muted); margin: 18px auto; padding: 12px;
+  }
+  .contact-list { list-style: none; padding: 0; margin: 16px 0 0; font-size: 13px; }
+  .contact-list li { padding: 9px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body data-variant="B">
+
+<div class="proto-ribbon">PROTOTYPE · 弃用 · 页面 IA</div>
+
+<details class="proto-brief" open>
+  <summary>这张原型要定什么 · 先读我</summary>
+  <div class="brief-grid">
+    <div>
+      <h3>票上的五个问题</h3>
+      <ol>
+        <li>单页还是多页？第二层放什么？</li>
+        <li>区块顺序：每块完成什么转化任务、回答哪个异议？</li>
+        <li>首屏必须出现什么？</li>
+        <li>移动端 / 微信内的折叠顺序与长度控制？</li>
+        <li>页面总长度与阅读时间预算？</li>
+      </ol>
+    </div>
+    <div>
+      <h3>三个结构方案（已选 B）</h3>
+      <p><b>A 单页叙事</b>：一条论证走到底；方法论内嵌。押注冷流量愿意读完。</p>
+      <p><b>B 两页分工</b>：首页只负责转化，方法论单独成页。押注访客有明确问题。</p>
+      <p><b>C 诊断优先</b>：页面是资格自检 + 预约工具；价格用表，证明靠后。押注微信 / 投放流量。</p>
+      <p class="micro"><b>2026-11-06 已选 B：首页 + 方法论页。</b> A/C 保留为对照。</p>
+    </div>
+    <div>
+      <h3>怎么用</h3>
+      <p>底部切换 A/B/C；<b>批注</b>显示每块的转化任务、异议与移动端处理；<b>折叠线</b>标出 844px 首屏位置；点任意「预约诊断」看 CTA 弹层。</p>
+      <p class="micro">低保真结构原型：看顺序与取舍，不看颜色与像素。文案为占位，定稿在文案票。</p>
+    </div>
+  </div>
+  <div class="brief-table-wrap">
+    <table class="brief-table">
+      <thead>
+        <tr><th></th><th>A 单页叙事</th><th>B 两页分工</th><th>C 诊断优先</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>结构</td><td>10 个内容区块，单页</td><td>7 个首页区块 + 6 个方法页区块</td><td>8 个区块 + 资格自检</td></tr>
+        <tr><td>移动端长度</td><td>约 11–13 屏</td><td>首页 6–7 屏；方法页 5–6 屏</td><td>约 7–8 屏</td></tr>
+        <tr><td>阅读时间</td><td>6–8 分钟</td><td>4–5 + 3–4 分钟</td><td>5–6 分钟</td></tr>
+        <tr><td>最适合</td><td>冷流量、需要完整论证</td><td>已有问题意识、愿意读方法</td><td>微信转发、投放落地页</td></tr>
+        <tr><td>主要风险</td><td>长，中段易流失</td><td>多一次点击，方法页可能没人看</td><td>自检选项可能过早劝退</td></tr>
+      </tbody>
+    </table>
+  </div>
+</details>
+
+<main class="stage">
+
+  <!-- ============================ VARIANT A ============================ -->
+  <div class="variant" data-variant="A">
+    <div class="variant-meta">
+      <b>A · 单页叙事</b>
+      <span>10 个内容区块 · 移动端约 11–13 屏 · 阅读 6–8 分钟</span>
+      <span>折叠线内：导航 + H1 + 副标题 + 主 CTA</span>
+      <span class="bet">赌注：冷流量愿意读一条完整论证；用锚点导航、每屏一个结论、重复 CTA 控制长度。</span>
+    </div>
+    <div class="site">
+      <header class="nav">
+        <div class="brand">序构 AI</div>
+        <nav class="nav-links" aria-label="主导航">
+          <a href="#a-problem">适用场景</a>
+          <a href="#a-diagnosis">诊断</a>
+          <a href="#a-method">方法</a>
+          <a href="#a-offer">报价</a>
+          <a href="#a-faq">常见问题</a>
+        </nav>
+        <button class="btn small" data-cta>预约诊断</button>
+      </header>
+      <div class="fold-line"><span>移动端首屏折叠线 · 844px</span></div>
+
+      <section class="sec hero" id="a-hero">
+        <aside class="anno">
+          <span class="anno-kicker">01 · 首屏</span>
+          <b>任务：5 秒内回答「为谁、解决什么、凭什么、下一步」</b>
+          <p>异议：这和我有什么关系？</p>
+          <p>移动端：H1 + 副标题 + 主 CTA 必须在折叠线内；信任条落到第二屏。</p>
+        </aside>
+        <div class="wrap">
+          <div class="hero-grid">
+            <div>
+              <p class="eyebrow">企业知识库 / 智能体落地服务商</p>
+              <h1>先理知识结构，<br>再交付 Agent</h1>
+              <p class="lede">让企业知识库答得准、用得上。面向已有知识库 / RAG，却答非所问、员工不用的 50–300 人企业。</p>
+              <div class="cta-row">
+                <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+                <a class="btn secondary" href="#a-samples">先看诊断样例（免留资）</a>
+              </div>
+              <p class="micro">带着场景图、数据清单、候选 Agent 和报价范围离开；不合适会直说。</p>
+            </div>
+            <div class="ph hero-visual">首屏视觉占位<br>本体图 / 场景图样例<br><span>不用 stock photo，不放客户 logo</span></div>
+          </div>
+          <div class="trust">
+            <div><b>诊断有交付物</b>场景图 · 知识清单 · 报价范围</div>
+            <div><b>价格公开</b>知识结构梳理 ¥5–8 万 · 单场景项目 ¥12–15 万</div>
+            <div><b>验收客观</b>30–50 题 · ≥80% · 零关键错误</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-problem">
+        <aside class="anno">
+          <span class="anno-kicker">02 · 自识别</span>
+          <b>任务：让访客用 10 秒认出自己</b>
+          <p>异议：你们是不是什么都做？</p>
+          <p>移动端：2×2 卡片改单列；每张卡只留标题 + 一句「诊断先看什么」。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">适用场景</p>
+          <h2>你属于哪一种？</h2>
+          <p class="lede">不按行业筛客，按「知识是否准备好」筛。四种情况，诊断的切入点不同。</p>
+          <div class="grid4">
+            <article>
+              <h3>已经上了知识库 / RAG / 智能客服，但答不准</h3>
+              <p>答非所问、员工不用、老板不满意。先定位是知识缺口、权限边界，还是评测缺失。</p>
+            </article>
+            <article>
+              <h3>想做一个 Agent，但知识散落在人、文档和系统里</h3>
+              <p>先判断哪些知识值得结构化、谁来维护，再决定第一个场景。</p>
+            </article>
+            <article>
+              <h3>老板要求降本，同行已经上了 AI</h3>
+              <p>先找一个可验收、能算清账的单场景，不追「全公司 AI 化」。</p>
+            </article>
+            <article>
+              <h3>新业务 / 出海，知识量突然暴增</h3>
+              <p>先圈定一个知识域和一类用户，避免一次铺开。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-diagnosis">
+        <aside class="anno">
+          <span class="anno-kicker">03 · 诊断</span>
+          <b>任务：把「免费」变成有交付物的专业服务</b>
+          <p>异议：是不是销售聊天？</p>
+          <p>移动端：交付物 5 条默认全展开；样例卡后置，不抢主 CTA。</p>
+        </aside>
+        <div class="wrap">
+          <div class="split">
+            <div>
+              <p class="eyebrow">免费入口</p>
+              <h2>诊断不是聊天，<br>是一次有交付物的 30 分钟</h2>
+              <p class="lede">你带着一个具体场景来。离开时，至少拿到五样东西。</p>
+              <ul class="checklist">
+                <li>一张场景图：谁在什么环节、用什么知识、做什么判断</li>
+                <li>一份数据 / 知识清单：已有、缺失、需要谁维护</li>
+                <li>2–3 个候选 Agent：先做哪个、为什么</li>
+                <li>一个报价范围：按场景，不按人天</li>
+                <li>「不建议做」的理由：如果现在不值得做，直说</li>
+              </ul>
+              <div class="cta-row"><button class="btn" data-cta>预约 30 分钟场景诊断</button></div>
+              <p class="micro">不预筛、不填长表单。每周最多 5 场。诊断后给书面纪要，具体时间沟通时约定。</p>
+            </div>
+            <div class="sample-card">
+              <div class="ph">诊断纪要样例缩略图<br>1 页 · 虚构企业 · 非客户项目</div>
+              <h3>先看一份诊断纪要样例</h3>
+              <p>包含知识缺口、候选 Agent、报价范围，以及一次「不建议做」的判断。</p>
+              <a class="btn secondary small" href="#a-samples">免留资下载</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-method">
+        <aside class="anno">
+          <span class="anno-kicker">04 · 方法</span>
+          <b>任务：证明「先理知识结构」不是黑话</b>
+          <p>异议：凭什么比 Dify / Coze 贵？</p>
+          <p>移动端：三步纵向排列；本体图放在文字之后，避免首屏全是概念。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">为什么是我们</p>
+          <h2>答不准，往往不是模型不行</h2>
+          <p class="lede">是知识没有结构：对象、关系、规则和权限散在文档、系统和人的脑子里。我们先把这层显式化，再让 Agent 接上。</p>
+          <div class="method">
+            <div><span class="stepnum">01</span><h3>对象与关系</h3><p>把业务里的「谁、什么、和谁有关」画出来。</p></div>
+            <div><span class="stepnum">02</span><h3>规则与边界</h3><p>什么能答、什么不能答、谁有权限。</p></div>
+            <div><span class="stepnum">03</span><h3>评测与迭代</h3><p>30–50 题验收，缺口回到知识层补。</p></div>
+          </div>
+          <div class="split" style="margin-top: 32px;">
+            <div class="ph method-ph">本体图样例占位<br>一个业务域的对象 / 关系 / 规则 / 权限</div>
+            <div>
+              <h3>「知识结构」不是黑话</h3>
+              <p>它是一张能拿来讨论、能验收的图：哪些对象、怎么关联、什么规则、谁能看。Agent 的答案好坏，取决于这张图是否清楚。</p>
+              <a class="btn secondary small" href="#a-samples">下载本体图样例</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-delivery">
+        <aside class="anno">
+          <span class="anno-kicker">05 · 交付</span>
+          <b>任务：降低「交了钱做不出来」的风险</b>
+          <p>异议：做失败了怎么办？</p>
+          <p>移动端：三阶段纵向；验收标准用 callout 保持可见，不折进手风琴。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">怎么交付</p>
+          <h2>先验证，再搭建，再上线</h2>
+          <p class="lede">项目不按「人天」卖，按场景交付。第一阶段是 go / no-go：不达标可以终止，不付后续。</p>
+          <div class="phases">
+            <div>
+              <span class="stepnum">第一阶段 · 30%</span>
+              <h3>场景验证</h3>
+              <p>3 周。单场景知识结构、可运行验证 demo、30–50 题评测报告、go / no-go 结论。</p>
+              <p class="micro">总价 30%，不低于 ¥4 万；不达标可终止，费用不退。</p>
+            </div>
+            <div>
+              <span class="stepnum">第二阶段 · 40%</span>
+              <h3>搭建与评测</h3>
+              <p>3–4 周。生产级 Agent、知识接入、权限、评测、UAT。</p>
+              <p class="micro">验收通过才进入上线。</p>
+            </div>
+            <div>
+              <span class="stepnum">第三阶段 · 30%</span>
+              <h3>上线与验收</h3>
+              <p>1 周。上线、验收、交接、30 天保修。</p>
+              <p class="micro">验收后转可选月度保障。</p>
+            </div>
+          </div>
+          <div class="callout">
+            <b>验收标准写进合同</b>
+            <p>开工前定 30–50 条评测问题 + 标准答案；≥80% 正确；零关键错误（权限越界、编造事实、合规 / 价格错误）；客户 UAT 通过。不以「客户主观满意」作为唯一标准。</p>
+            <p class="micro">不达标：1 周免费整改；仍不达标可终止，不付第二阶段。</p>
+          </div>
+          <div class="ph demo-ph">验证 demo 位 · 等第一个项目跑通后替换<br>开站前不放 demo，避免假演示</div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-offer">
+        <aside class="anno">
+          <span class="anno-kicker">06 · 报价</span>
+          <b>任务：让预算可判断，筛掉错配</b>
+          <p>异议：到底多少钱？</p>
+          <p>移动端：4 张卡单列；价格先于交付清单，先让访客判断预算。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">Offer</p>
+          <h2>四条 Offer，价格写在页面上</h2>
+          <p class="lede">从免费诊断开始。不需要先买一个大项目，也不卖「试点」。</p>
+          <div class="cards-offer">
+            <article class="card">
+              <span class="card-tag">入口</span>
+              <h3>场景诊断</h3>
+              <p class="price">免费</p>
+              <p class="micro">30 分钟 + 书面纪要</p>
+              <p><b>适合：</b>有知识库 / RAG / 智能体需求，但知识散落或答不准</p>
+              <ul>
+                <li>场景图</li>
+                <li>数据 / 知识清单</li>
+                <li>2–3 个候选 Agent</li>
+                <li>报价范围</li>
+                <li>不建议做的理由</li>
+              </ul>
+              <p class="micro">不含实施、demo、正式方案。</p>
+              <button class="btn small" data-cta>预约诊断</button>
+            </article>
+            <article class="card">
+              <span class="card-tag">可独立</span>
+              <h3>知识结构梳理</h3>
+              <p class="price">¥5–8 万</p>
+              <p class="micro">2–4 周</p>
+              <p><b>适合：</b>还没准备做 Agent 项目，但知识散落、想先理清</p>
+              <ul>
+                <li>本体图：对象 / 关系 / 规则 / 权限</li>
+                <li>数据与知识清单</li>
+                <li>缺口与整改清单</li>
+                <li>2–3 个候选 Agent</li>
+              </ul>
+              <p class="micro">不含 Agent 搭建、系统集成、数仓 / 中台 / 主数据平台。</p>
+              <button class="btn small secondary" data-cta>先聊边界</button>
+            </article>
+            <article class="card">
+              <span class="card-tag">主项目</span>
+              <h3>Agent 项目 · 单场景</h3>
+              <p class="price">¥12–15 万</p>
+              <p class="micro">4–8 周 · 含知识结构梳理</p>
+              <p><b>适合：</b>已选定一个场景，准备上生产</p>
+              <ul>
+                <li>知识结构梳理</li>
+                <li>搭建、评测、上线</li>
+                <li>30 天保修</li>
+                <li>第 2 个场景 +¥6–8 万；第 3 个 +¥5–7 万</li>
+              </ul>
+              <p class="micro">不含额外数据源 / 集成、模型 / 云资源。</p>
+              <button class="btn small" data-cta>预约诊断</button>
+            </article>
+            <article class="card">
+              <span class="card-tag">可选</span>
+              <h3>月度保障</h3>
+              <p class="price">¥5,000–10,000<span style="font-size:13px;font-weight:500;"> / 月</span></p>
+              <p class="micro">按月，30 天前可停</p>
+              <p><b>适合：</b>已上线、需要持续调优</p>
+              <ul>
+                <li>1–2 人天 / 月</li>
+                <li>监控、问答调优、小知识更新</li>
+                <li>月度报告</li>
+                <li>1 个工作日响应</li>
+              </ul>
+              <p class="micro">不含新场景、新系统集成、7×24。</p>
+              <button class="btn small secondary" data-cta>了解保障</button>
+            </article>
+          </div>
+          <p class="footnote">含税可开票；江浙沪上门差旅含在项目价内，其他地区实报实销；模型 API 与云资源按实际用量代付，不赚差价，也可用客户自己的账号；最终报价以诊断后书面范围为准；报价 30 天有效。</p>
+        </div>
+      </section>
+
+      <section class="sec" id="a-samples">
+        <aside class="anno">
+          <span class="anno-kicker">07 · 证明</span>
+          <b>任务：零案例下用交付物样例建立信任</b>
+          <p>异议：你们做过吗？</p>
+          <p>移动端：三份样例纵向；下载链接用次级按钮，不抢主 CTA。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">零案例下的证明</p>
+          <h2>先看三份样例，再决定要不要聊</h2>
+          <p class="lede">没有客户 logo，也不编客户案例。用可检查的交付物证明方法。三份都免留资下载。</p>
+          <div class="cards3">
+            <article class="sample-card">
+              <div class="ph">PDF 缩略图</div>
+              <h3>诊断纪要样例</h3>
+              <p>虚构企业 · 知识缺口 · 候选 Agent · 报价范围 · 不建议做的判断</p>
+              <a class="btn secondary small" href="#" onclick="return false;">下载 PDF</a>
+              <p class="micro">样例 · 基于公开语料或虚构企业，非客户项目</p>
+            </article>
+            <article class="sample-card">
+              <div class="ph">PDF 缩略图</div>
+              <h3>本体图样例</h3>
+              <p>一个业务域的对象 / 关系 / 规则 / 权限图，配三步方法</p>
+              <a class="btn secondary small" href="#" onclick="return false;">下载 PDF</a>
+              <p class="micro">样例 · 基于公开语料或虚构企业，非客户项目</p>
+            </article>
+            <article class="sample-card">
+              <div class="ph">PDF 缩略图</div>
+              <h3>评测报告样例</h3>
+              <p>30–50 题结构 · 评分口径 · ≥80% 正确与零关键错误示例</p>
+              <a class="btn secondary small" href="#" onclick="return false;">下载 PDF</a>
+              <p class="micro">样例 · 基于公开语料或虚构企业，非客户项目</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-team">
+        <aside class="anno">
+          <span class="anno-kicker">08 · 团队</span>
+          <b>任务：回答「谁来做、跑了怎么办」</b>
+          <p>异议：小团队可靠吗？</p>
+          <p>移动端：文字 + 占位图；不公开人数，不用 stock photo。</p>
+        </aside>
+        <div class="wrap">
+          <div class="split">
+            <div>
+              <p class="eyebrow">谁来做</p>
+              <h2>负责人亲自交付，每季只接 2–3 个项目</h2>
+              <p>不公开人数，也不放团队合影。你能直接和做项目的人聊。</p>
+              <ul class="checklist">
+                <li>角色与年限：[待本人确认]</li>
+                <li>项目类型：知识库 / RAG / Agent / 本体建模</li>
+                <li>公开仓库：[待本人确认是否露出]</li>
+                <li>30 天保修；决策链短，周报同步</li>
+              </ul>
+            </div>
+            <div class="ph" style="min-height: 220px;">团队信息占位<br>不公开人数 / 不用 stock photo / 不放客户 logo</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="a-boundary">
+        <aside class="anno">
+          <span class="anno-kicker">09 · 边界</span>
+          <b>任务：敢筛客，降低错配</b>
+          <p>异议：我这种情况接不接？</p>
+          <p>移动端：两列改单列；「什么时候不建议做」必须留在页面上。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">边界</p>
+          <h2>我们不适合所有人</h2>
+          <div class="split">
+            <div>
+              <h3>不接</h3>
+              <ul class="checklist">
+                <li>纯官网 / 小程序 / 流程自动化</li>
+                <li>只买 SaaS / 模板 / 低价外包</li>
+                <li>纯人力驻场 / 7×24 运维</li>
+                <li>demo-only，不准备上生产</li>
+              </ul>
+            </div>
+            <div>
+              <h3>什么时候不建议做</h3>
+              <ul class="checklist">
+                <li>知识只在一两个人脑子里，且不愿投入梳理</li>
+                <li>期望一次上线就全自动，不接受评测和迭代</li>
+                <li>没有可验收的业务问题，只想「先上一个 AI」</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec faq" id="a-faq">
+        <aside class="anno">
+          <span class="anno-kicker">10 · FAQ</span>
+          <b>任务：拆掉最后的反对意见</b>
+          <p>异议：数据安全 / 费用 / 失败怎么办？</p>
+          <p>移动端：手风琴默认全关；首项可默认展开，演示交互。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">常见问题</p>
+          <h2>先把丑话说在前面</h2>
+          <details open>
+            <summary>数据安全怎么保证？</summary>
+            <p>最小必要、权限边界，可用客户自己的账号或环境；具体边界在诊断时写清楚。</p>
+          </details>
+          <details>
+            <summary>为什么比 Dify / Coze 贵？</summary>
+            <p>自助工具能搭 demo，但知识层没人理。我们交付的是知识结构 + 可验收的生产 Agent，不是一套模板。</p>
+          </details>
+          <details>
+            <summary>为什么不单卖「试点」？</summary>
+            <p>项目第一阶段叫「场景验证」，是 go / no-go，不单独售卖。它属于整个项目，不是一个便宜的小项目。</p>
+          </details>
+          <details>
+            <summary>模型 / 云费用怎么算？</summary>
+            <p>按实际用量代付，不赚差价；也可以直接用客户自己的账号。服务费与资源费分开。</p>
+          </details>
+          <details>
+            <summary>交付失败怎么办？</summary>
+            <p>1 周免费整改；仍不达标可终止，不付第二阶段。第一阶段费用不退，这是双方共同承担验证风险的方式。</p>
+          </details>
+          <details>
+            <summary>能保证效果吗？</summary>
+            <p>不能空口保证。开工前定 30–50 条评测问题 + 标准答案；≥80% 正确、零关键错误、UAT 通过，才算验收。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="sec band" id="a-cta">
+        <aside class="anno">
+          <span class="anno-kicker">11 · 收口</span>
+          <b>任务：重复单一 CTA，不再引入新信息</b>
+          <p>异议：下一步是什么？</p>
+          <p>移动端：一屏内完成；CTA 直接弹企微 / 飞书 / 电话 / 邮箱。</p>
+        </aside>
+        <div class="wrap">
+          <h2>带着一个具体场景来，<br>30 分钟判断值不值得做</h2>
+          <p class="lede">如果现在不适合，我们会直说；如果适合，你会带着一张场景图、一份数据清单和报价范围离开。</p>
+          <div class="cta-row">
+            <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+            <span class="micro">企业微信 / 飞书 / 电话 / 邮箱</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span>序构 AI</span>
+        <span>备案信息占位 · 隐私说明 · 样例标注 · © 2026</span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ============================ VARIANT B ============================ -->
+  <div class="variant" data-variant="B">
+    <div class="variant-meta">
+      <b>B · 两页分工</b><span class="chosen-tag">已选</span>
+      <span>首页 7 个区块 + 方法页 6 个区块 · 首页 6–7 屏 / 方法页 5–6 屏 · 阅读 4–5 + 3–4 分钟</span>
+      <span>折叠线内：导航 + H1 + 副标题 + 主 CTA + 一行信任</span>
+      <span class="bet">赌注：访客有明确问题，愿意为「方法」多点一次；首页不藏报价与 CTA，方法页不重复卖点。</span>
+    </div>
+    <div class="proto-subnav">
+      <span class="subnav-label">原型内导航</span>
+      <button type="button" class="page-btn active" data-page-link="home">首页</button>
+      <button type="button" class="page-btn" data-page-link="method">方法论页</button>
+      <span class="subnav-hint">首页负责转化；方法论单独成页</span>
+    </div>
+
+    <div class="page" data-page-panel="home">
+      <div class="site">
+        <header class="nav">
+          <div class="brand">序构 AI</div>
+          <nav class="nav-links" aria-label="主导航">
+            <a href="#b-problem">适用场景</a>
+            <a href="#b-offer">报价</a>
+            <a href="#b-proof">证明</a>
+            <button type="button" data-page-link="method">方法</button>
+          </nav>
+          <button class="btn small" data-cta>预约诊断</button>
+        </header>
+        <div class="fold-line"><span>移动端首屏折叠线 · 844px</span></div>
+
+        <section class="sec hero" id="b-hero">
+          <aside class="anno">
+            <span class="anno-kicker">01 · 首屏</span>
+            <b>任务：一屏内讲清价值，把「方法」留成第二页入口</b>
+            <p>异议：这和我有什么关系？</p>
+            <p>移动端：折叠线内保留 H1 + 副标题 + CTA + 一行信任；视觉占位移除。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">企业知识库 / 智能体落地服务商</p>
+            <h1>先理知识结构，再交付 Agent</h1>
+            <p class="lede">让企业知识库答得准、用得上。面向已有知识库 / RAG，却答非所问、员工不用的 50–300 人企业。</p>
+            <div class="cta-row">
+              <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+              <button class="btn secondary" type="button" data-page-link="method">先看方法论</button>
+            </div>
+            <p class="micro">带着场景图、数据清单、候选 Agent 和报价范围离开；不合适会直说。</p>
+            <p class="micro" style="margin-top: 18px;">诊断有交付物 · 价格公开 · 验收 30–50 题 / ≥80% / 零关键错误</p>
+          </div>
+        </section>
+
+        <section class="sec" id="b-problem">
+          <aside class="anno">
+            <span class="anno-kicker">02 · 自识别</span>
+            <b>任务：快速分流四种触发，首页只留一行判断</b>
+            <p>异议：你们是不是什么都做？</p>
+            <p>移动端：四宫格单列，只保留标题 + 一句；详细解释放方法页。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">适用场景</p>
+            <h2>你属于哪一种？</h2>
+            <div class="grid4">
+              <article><h3>已上知识库 / RAG，但答不准</h3><p>先定位知识缺口、权限边界或评测缺失。</p></article>
+              <article><h3>想做 Agent，但知识散落</h3><p>先判断哪些知识值得结构化、谁来维护。</p></article>
+              <article><h3>老板要求降本，同行已上 AI</h3><p>先找一个可验收、能算清账的单场景。</p></article>
+              <article><h3>新业务 / 出海，知识量暴增</h3><p>先圈定一个知识域和一类用户。</p></article>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-diagnosis">
+          <aside class="anno">
+            <span class="anno-kicker">03 · 诊断</span>
+            <b>任务：把免费诊断讲成一件有交付物的专业服务</b>
+            <p>异议：是不是销售聊天？</p>
+            <p>移动端：交付物 5 条 + 样例下载；样例卡放在 CTA 之后。</p>
+          </aside>
+          <div class="wrap">
+            <div class="split">
+              <div>
+                <p class="eyebrow">免费入口</p>
+                <h2>诊断不是聊天，<br>是一次有交付物的 30 分钟</h2>
+                <p class="lede">你带着一个具体场景来。离开时，至少拿到五样东西。</p>
+                <ul class="checklist">
+                  <li>一张场景图：谁在什么环节、用什么知识、做什么判断</li>
+                  <li>一份数据 / 知识清单：已有、缺失、需要谁维护</li>
+                  <li>2–3 个候选 Agent：先做哪个、为什么</li>
+                  <li>一个报价范围：按场景，不按人天</li>
+                  <li>「不建议做」的理由：如果现在不值得做，直说</li>
+                </ul>
+                <div class="cta-row"><button class="btn" data-cta>预约 30 分钟场景诊断</button></div>
+                <p class="micro">不预筛、不填长表单。每周最多 5 场。诊断后给书面纪要，具体时间沟通时约定。</p>
+              </div>
+              <div class="sample-card">
+                <div class="ph" style="min-height: 180px;">诊断纪要样例缩略图<br>1 页 · 虚构企业 · 非客户项目</div>
+                <h3>先看一份诊断纪要样例</h3>
+                <p>包含知识缺口、候选 Agent、报价范围，以及一次「不建议做」的判断。</p>
+                <a class="btn secondary small" href="#b-proof">免留资下载</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-offer">
+          <aside class="anno">
+            <span class="anno-kicker">04 · 报价</span>
+            <b>任务：让预算可判断，筛掉错配</b>
+            <p>异议：到底多少钱？</p>
+            <p>移动端：4 张卡单列；价格先于交付清单。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">Offer</p>
+            <h2>四条 Offer，价格写在页面上</h2>
+            <p class="lede">从免费诊断开始。不需要先买一个大项目，也不卖「试点」。</p>
+            <div class="cards-offer">
+              <article class="card">
+                <span class="card-tag">入口</span>
+                <h3>场景诊断</h3>
+                <p class="price">免费</p>
+                <p class="micro">30 分钟 + 书面纪要</p>
+                <ul>
+                  <li>场景图 / 数据清单</li>
+                  <li>2–3 个候选 Agent</li>
+                  <li>报价范围 / 不建议做的理由</li>
+                </ul>
+                <button class="btn small" data-cta>预约诊断</button>
+              </article>
+              <article class="card">
+                <span class="card-tag">可独立</span>
+                <h3>知识结构梳理</h3>
+                <p class="price">¥5–8 万</p>
+                <p class="micro">2–4 周</p>
+                <ul>
+                  <li>本体图 / 知识清单</li>
+                  <li>缺口与整改清单</li>
+                  <li>2–3 个候选 Agent</li>
+                </ul>
+                <button class="btn small secondary" data-cta>先聊边界</button>
+              </article>
+              <article class="card">
+                <span class="card-tag">主项目</span>
+                <h3>Agent 项目 · 单场景</h3>
+                <p class="price">¥12–15 万</p>
+                <p class="micro">4–8 周 · 含知识结构梳理</p>
+                <ul>
+                  <li>搭建 / 评测 / 上线</li>
+                  <li>30 天保修</li>
+                  <li>增场景 +¥6–8 万 / +¥5–7 万</li>
+                </ul>
+                <button class="btn small" data-cta>预约诊断</button>
+              </article>
+              <article class="card">
+                <span class="card-tag">可选</span>
+                <h3>月度保障</h3>
+                <p class="price">¥5,000–10,000<span style="font-size:13px;font-weight:500;"> / 月</span></p>
+                <p class="micro">按月，30 天前可停</p>
+                <ul>
+                  <li>1–2 人天 / 月</li>
+                  <li>监控 / 调优 / 小知识更新</li>
+                  <li>1 个工作日响应</li>
+                </ul>
+                <button class="btn small secondary" data-cta>了解保障</button>
+              </article>
+            </div>
+            <p class="footnote">含税可开票；江浙沪上门差旅含在项目价内，其他地区实报实销；模型 API 与云资源按实际用量代付，不赚差价；最终报价以诊断后书面范围为准；报价 30 天有效。三阶段付款与验收标准见方法页。</p>
+          </div>
+        </section>
+
+        <section class="sec" id="b-proof">
+          <aside class="anno">
+            <span class="anno-kicker">05 · 证明</span>
+            <b>任务：用交付物样例 + 团队信息替代客户案例</b>
+            <p>异议：你们做过吗？小团队可靠吗？</p>
+            <p>移动端：样例三行列表 + 团队一段话；不铺成三张大卡。</p>
+          </aside>
+          <div class="wrap">
+            <div class="split">
+              <div>
+                <p class="eyebrow">零案例下的证明</p>
+                <h2>没有客户 logo，<br>就给你看交付物</h2>
+                <p class="lede">三份样例免留资下载，全部标注「样例 · 基于公开语料或虚构企业，非客户项目」。</p>
+                <ul class="checklist">
+                  <li>诊断纪要样例：知识缺口、候选 Agent、报价范围</li>
+                  <li>本体图样例：一个业务域的对象 / 关系 / 规则 / 权限</li>
+                  <li>评测报告样例：30–50 题结构、评分口径、验收示例</li>
+                </ul>
+                <p class="micro">团队：负责人亲自交付，每季只接 2–3 个项目；30 天保修；决策链短。人数不公开。</p>
+              </div>
+              <div class="ph" style="min-height: 250px;">三份样例文件列表占位<br>下载免留资 · 不抢主 CTA</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-boundary">
+          <aside class="anno">
+            <span class="anno-kicker">06 · 边界 + FAQ</span>
+            <b>任务：首页一次清掉「接不接」和「怎么失败」两个大异议</b>
+            <p>异议：我这种情况接不接？做失败了怎么办？</p>
+            <p>移动端：边界两列改单列；FAQ 只留 4 项，避免首页变长。</p>
+          </aside>
+          <div class="wrap">
+            <div class="split" style="align-items: start;">
+              <div>
+                <p class="eyebrow">边界</p>
+                <h2>我们不适合所有人</h2>
+                <h3>不接</h3>
+                <ul class="checklist">
+                  <li>纯官网 / 小程序 / 流程自动化</li>
+                  <li>只买 SaaS / 模板 / 低价外包</li>
+                  <li>纯人力驻场 / 7×24 运维</li>
+                  <li>demo-only，不准备上生产</li>
+                </ul>
+                <h3>什么时候不建议做</h3>
+                <ul class="checklist">
+                  <li>知识只在一两个人脑子里，且不愿投入梳理</li>
+                  <li>期望一次上线就全自动，不接受评测和迭代</li>
+                  <li>没有可验收的业务问题，只想「先上一个 AI」</li>
+                </ul>
+              </div>
+              <div class="faq">
+                <p class="eyebrow">常见问题</p>
+                <details open>
+                  <summary>数据安全怎么保证？</summary>
+                  <p>最小必要、权限边界，可用客户自己的账号或环境；具体边界在诊断时写清楚。</p>
+                </details>
+                <details>
+                  <summary>为什么比 Dify / Coze 贵？</summary>
+                  <p>自助工具能搭 demo，但知识层没人理。我们交付的是知识结构 + 可验收的生产 Agent。</p>
+                </details>
+                <details>
+                  <summary>交付失败怎么办？</summary>
+                  <p>1 周免费整改；仍不达标可终止，不付第二阶段。第一阶段费用不退。</p>
+                </details>
+                <details>
+                  <summary>能保证效果吗？</summary>
+                  <p>开工前定 30–50 条评测问题；≥80% 正确、零关键错误、UAT 通过才算验收。详见方法页。</p>
+                </details>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec band" id="b-cta">
+          <aside class="anno">
+            <span class="anno-kicker">07 · 收口</span>
+            <b>任务：重复单一 CTA，不再引入新信息</b>
+            <p>异议：下一步是什么？</p>
+            <p>移动端：一屏内完成；CTA 直接弹企微 / 飞书 / 电话 / 邮箱。</p>
+          </aside>
+          <div class="wrap">
+            <h2>带着一个具体场景来，<br>30 分钟判断值不值得做</h2>
+            <p class="lede">如果现在不适合，我们会直说；如果适合，你会带着一张场景图、一份数据清单和报价范围离开。</p>
+            <div class="cta-row">
+              <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+              <span class="micro">企业微信 / 飞书 / 电话 / 邮箱</span>
+            </div>
+          </div>
+        </section>
+
+        <footer class="foot">
+          <span>序构 AI</span>
+          <span>备案信息占位 · 隐私说明 · 样例标注 · © 2026</span>
+        </footer>
+      </div>
+    </div>
+
+    <div class="page" data-page-panel="method" hidden>
+      <div class="site">
+        <header class="nav">
+          <div class="brand">序构 AI</div>
+          <nav class="nav-links" aria-label="方法论页导航">
+            <button type="button" data-page-link="home">首页</button>
+            <a href="#b-method-eval">评测方法</a>
+            <a href="#b-method-proof">样例</a>
+          </nav>
+          <button class="btn small" data-cta>预约诊断</button>
+        </header>
+        <div class="fold-line"><span>移动端首屏折叠线 · 844px</span></div>
+
+        <section class="sec hero" id="b-method-hero">
+          <aside class="anno">
+            <span class="anno-kicker">M1 · 方法页首屏</span>
+            <b>任务：接住「想先搞懂原理」的访客，不重复卖点</b>
+            <p>异议：知识结构到底是什么？</p>
+            <p>移动端：折叠线内 H1 + 一句解释 + 返回报价 / 预约的入口。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">方法论</p>
+            <h1>一张图看懂：<br>Agent 为什么答不准</h1>
+            <p class="lede">不是模型不行，是知识结构没显式化。对象、关系、规则和权限散在文档、系统和人的脑子里，Agent 只能猜。</p>
+            <div class="cta-row">
+              <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+              <button class="btn secondary" type="button" data-page-link="home">回到首页</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-method-ontology">
+          <aside class="anno">
+            <span class="anno-kicker">M2 · 知识结构</span>
+            <b>任务：把「本体」翻译成业务语言</b>
+            <p>异议：这是不是咨询黑话？</p>
+            <p>移动端：三步纵向；本体图放在三步之后，允许横向缩放。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">知识结构</p>
+            <h2>对象、关系、规则、权限</h2>
+            <p class="lede">一张能拿来讨论、能验收的图。Agent 的答案好坏，取决于这张图是否清楚。</p>
+            <div class="ph method-ph">本体图样例占位<br>一个业务域：对象 / 关系 / 规则 / 权限</div>
+            <div class="method" style="margin-top: 20px;">
+              <div><span class="stepnum">01</span><h3>对象与关系</h3><p>业务里的「谁、什么、和谁有关」。</p></div>
+              <div><span class="stepnum">02</span><h3>规则与边界</h3><p>什么能答、什么不能答、谁有权限。</p></div>
+              <div><span class="stepnum">03</span><h3>评测与迭代</h3><p>30–50 题验收，缺口回到知识层补。</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-method-eval">
+          <aside class="anno">
+            <span class="anno-kicker">M3 · 评测</span>
+            <b>任务：证明验收不靠主观满意</b>
+            <p>异议：怎么判断做得好不好？</p>
+            <p>移动端：题量与门槛用一行粗体；报告样例下载用次级按钮。</p>
+          </aside>
+          <div class="wrap">
+            <div class="split">
+              <div>
+                <p class="eyebrow">评测方法</p>
+                <h2>先定 30–50 题，<br>再谈上线</h2>
+                <p class="lede">开工前和客户一起定评测问题 + 标准答案。题型覆盖事实、多跳、权限、拒答和时效。</p>
+                <div class="callout" style="margin-top: 0;">
+                  <b>验收门槛</b>
+                  <p>≥80% 正确；零关键错误（权限越界、编造事实、合规 / 价格错误）；客户 UAT 通过。</p>
+                  <p class="micro">不达标：1 周免费整改；仍不达标可终止，不付第二阶段。</p>
+                </div>
+              </div>
+              <div class="sample-card">
+                <div class="ph" style="min-height: 170px;">评测报告样例缩略图<br>30–50 题 · 评分口径 · 示例</div>
+                <h3>评测报告样例</h3>
+                <p>看得到题型、评分口径和「零关键错误」长什么样。</p>
+                <a class="btn secondary small" href="#" onclick="return false;">免留资下载</a>
+                <p class="micro">样例 · 基于公开语料或虚构企业，非客户项目</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-method-phases">
+          <aside class="anno">
+            <span class="anno-kicker">M4 · 交付阶段</span>
+            <b>任务：把 go / no-go 讲清楚</b>
+            <p>异议：做失败怎么办？</p>
+            <p>移动端：三阶段纵向；付款比例与 Gate 保持可见。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">交付阶段</p>
+            <h2>先验证，再搭建，再上线</h2>
+            <div class="phases">
+              <div><span class="stepnum">第一阶段 · 30%</span><h3>场景验证</h3><p>3 周。单场景知识结构、验证 demo、评测报告、go / no-go。</p><p class="micro">不达标可终止，费用不退。</p></div>
+              <div><span class="stepnum">第二阶段 · 40%</span><h3>搭建与评测</h3><p>3–4 周。生产级 Agent、知识接入、权限、评测、UAT。</p><p class="micro">验收通过才进入上线。</p></div>
+              <div><span class="stepnum">第三阶段 · 30%</span><h3>上线与验收</h3><p>1 周。上线、验收、交接、30 天保修。</p><p class="micro">验收后转可选月度保障。</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="b-method-proof">
+          <aside class="anno">
+            <span class="anno-kicker">M5 · 样例与 demo</span>
+            <b>任务：把方法落到实处，给出处</b>
+            <p>异议：有没有实际东西可看？</p>
+            <p>移动端：三份样例纵向；demo 位最后，不抢 CTA。</p>
+          </aside>
+          <div class="wrap">
+            <p class="eyebrow">可检查的样例</p>
+            <h2>方法不是 PPT</h2>
+            <div class="cards3">
+              <article class="sample-card">
+                <div class="ph">PDF 缩略图</div>
+                <h3>诊断纪要样例</h3>
+                <p>知识缺口 · 候选 Agent · 报价范围 · 不建议做的判断</p>
+                <a class="btn secondary small" href="#" onclick="return false;">下载</a>
+                <p class="micro">样例 · 非客户项目</p>
+              </article>
+              <article class="sample-card">
+                <div class="ph">PDF 缩略图</div>
+                <h3>本体图样例</h3>
+                <p>对象 / 关系 / 规则 / 权限，配三步方法</p>
+                <a class="btn secondary small" href="#" onclick="return false;">下载</a>
+                <p class="micro">样例 · 非客户项目</p>
+              </article>
+              <article class="sample-card">
+                <div class="ph">PDF 缩略图</div>
+                <h3>评测报告样例</h3>
+                <p>30–50 题结构 · 评分口径 · 验收示例</p>
+                <a class="btn secondary small" href="#" onclick="return false;">下载</a>
+                <p class="micro">样例 · 非客户项目</p>
+              </article>
+            </div>
+            <div class="ph demo-ph">验证 demo 位 · 等第一个项目跑通后替换<br>开站前不放 demo，避免假演示</div>
+          </div>
+        </section>
+
+        <section class="sec band" id="b-method-cta">
+          <aside class="anno">
+            <span class="anno-kicker">M6 · 收口</span>
+            <b>任务：把方法读者送回同一个 CTA</b>
+            <p>异议：接下来呢？</p>
+            <p>移动端：返回首页 + 预约两个按钮，主 CTA 不变。</p>
+          </aside>
+          <div class="wrap">
+            <h2>方法看完了，带着场景来聊</h2>
+            <p class="lede">30 分钟，判断你的知识结构够不够、第一个 Agent 该做什么。</p>
+            <div class="cta-row">
+              <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+              <button class="btn secondary" type="button" data-page-link="home">回到首页</button>
+            </div>
+          </div>
+        </section>
+
+        <footer class="foot">
+          <span>序构 AI</span>
+          <span>备案信息占位 · 隐私说明 · 样例标注 · © 2026</span>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ VARIANT C ============================ -->
+  <div class="variant" data-variant="C">
+    <div class="variant-meta">
+      <b>C · 诊断优先</b>
+      <span>8 个区块 + 资格自检 · 移动端约 7–8 屏 · 阅读 5–6 分钟</span>
+      <span>折叠线内：H1 + 自检三选一 + 结果提示；主 CTA 紧随其后</span>
+      <span class="bet">赌注：访客愿意先自检；用价格表和边界换掉叙事长度。风险是自检选项可能过早劝退不了解问题的流量。</span>
+    </div>
+    <div class="site">
+      <header class="nav">
+        <div class="brand">序构 AI</div>
+        <nav class="nav-links" aria-label="主导航">
+          <a href="#c-price">价格</a>
+          <a href="#c-boundary">边界</a>
+          <a href="#c-proof">样例</a>
+        </nav>
+        <button class="btn small" data-cta>预约诊断</button>
+      </header>
+      <div class="fold-line"><span>移动端首屏折叠线 · 844px</span></div>
+
+      <section class="sec hero" id="c-hero">
+        <aside class="anno">
+          <span class="anno-kicker">01 · 首屏 + 自检</span>
+          <b>任务：先帮访客判断「该不该聊」，再给 CTA</b>
+          <p>异议：我这种情况值得做吗？</p>
+          <p>移动端：H1 + 三个自检选项 + 结果提示在折叠线内；主 CTA 紧随其后，选项点击后原地出建议。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">30 分钟场景诊断</p>
+          <h1>先判断：<br>这个场景值不值得做</h1>
+          <p class="lede">不是所有知识库都要重做，也不是所有 Agent 都值得上。30 分钟，带着场景图、数据清单、候选 Agent 和报价范围离开。</p>
+          <div class="triage" role="group" aria-label="资格自检">
+            <button type="button" data-triage="a">已经上了知识库 / RAG / 智能客服，但答不准</button>
+            <button type="button" data-triage="b">想做一个 Agent，但知识散落在人、文档和系统里</button>
+            <button type="button" data-triage="c">还在了解，不确定要不要做</button>
+          </div>
+          <div class="triage-result" aria-live="polite">选一种情况，看看建议的起点。</div>
+          <div class="cta-row">
+            <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+            <span class="micro">免费 · 每周最多 5 场 · 不合适会直说</span>
+          </div>
+          <p class="micro" style="margin-top: 8px;">已有三份交付物样例：诊断纪要 / 本体图 / 评测报告。免留资下载。</p>
+        </div>
+      </section>
+
+      <section class="sec" id="c-deliverables">
+        <aside class="anno">
+          <span class="anno-kicker">02 · 诊断交付物</span>
+          <b>任务：把「免费诊断」具象成三件可带走的东西</b>
+          <p>异议：30 分钟能有什么结果？</p>
+          <p>移动端：三张交付物卡片纵向；不写「五大交付物」长清单。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">你会带走什么</p>
+          <h2>不是会议纪要，是三件交付物</h2>
+          <div class="cards3">
+            <article class="card">
+              <span class="card-tag">01</span>
+              <h3>一张场景图</h3>
+              <p>谁在什么环节、用什么知识、做什么判断；哪些能做，哪些不适合。</p>
+            </article>
+            <article class="card">
+              <span class="card-tag">02</span>
+              <h3>一份知识清单</h3>
+              <p>已有、缺失、需要谁维护；对象、关系、规则和权限的缺口。</p>
+            </article>
+            <article class="card">
+              <span class="card-tag">03</span>
+              <h3>2–3 个候选 Agent + 报价范围</h3>
+              <p>先做哪个、为什么；按场景报价，不按人天。以及「不建议做」的理由。</p>
+            </article>
+          </div>
+          <p class="micro" style="margin-top: 16px;">不预筛、不填长表单。诊断后给书面纪要，具体时间沟通时约定。</p>
+        </div>
+      </section>
+
+      <section class="sec" id="c-proof">
+        <aside class="anno">
+          <span class="anno-kicker">03 · 证明</span>
+          <b>任务：在报价之前，先给可检查的证据</b>
+          <p>异议：你们做过吗？</p>
+          <p>移动端：三份样例用列表，不用三张大卡；下载不抢主 CTA。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">零案例下的证明</p>
+          <h2>先看交付物，再谈价格</h2>
+          <p class="lede">没有客户 logo，也不编客户案例。三份样例免留资下载，全部标注「样例 · 基于公开语料或虚构企业，非客户项目」。</p>
+          <div class="cards3">
+            <article class="sample-card">
+              <div class="ph">PDF 缩略图</div>
+              <h3>诊断纪要样例</h3>
+              <p>知识缺口 · 候选 Agent · 报价范围 · 不建议做的判断</p>
+              <a class="btn secondary small" href="#" onclick="return false;">下载</a>
+              <p class="micro">样例 · 非客户项目</p>
+            </article>
+            <article class="sample-card">
+              <div class="ph">PDF 缩略图</div>
+              <h3>本体图样例</h3>
+              <p>对象 / 关系 / 规则 / 权限，配三步方法</p>
+              <a class="btn secondary small" href="#" onclick="return false;">下载</a>
+              <p class="micro">样例 · 非客户项目</p>
+            </article>
+            <article class="sample-card">
+              <div class="ph">PDF 缩略图</div>
+              <h3>评测报告样例</h3>
+              <p>30–50 题结构 · 评分口径 · 验收示例</p>
+              <a class="btn secondary small" href="#" onclick="return false;">下载</a>
+              <p class="micro">样例 · 非客户项目</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="c-price">
+        <aside class="anno">
+          <span class="anno-kicker">04 · 价格与阶段</span>
+          <b>任务：用一张表替代四张营销卡，让预算可判断</b>
+          <p>异议：到底多少钱、怎么付？</p>
+          <p>移动端：表格横向滚动，首列固定；表格前加一句「价格带，不是最终报价」。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">Offer</p>
+          <h2>价格与阶段，一张表看完</h2>
+          <p class="lede">从免费诊断开始。项目按场景卖，三段付款，第一阶段 go / no-go。</p>
+          <div class="price-table-wrap">
+            <table class="price-table">
+              <thead>
+                <tr><th>档位</th><th>价格</th><th>周期</th><th>交付什么</th><th>不包含什么</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><b>场景诊断</b></td><td>免费</td><td>30 分钟 + 书面纪要</td><td>场景图、知识清单、2–3 个候选 Agent、报价范围、不建议做的理由</td><td>实施、demo、正式方案</td></tr>
+                <tr><td><b>知识结构梳理</b></td><td>¥5–8 万</td><td>2–4 周</td><td>本体图、数据与知识清单、缺口与整改清单、候选 Agent</td><td>Agent 搭建、系统集成、数仓 / 中台 / 主数据平台</td></tr>
+                <tr><td><b>Agent 项目 · 单场景</b></td><td>¥12–15 万</td><td>4–8 周</td><td>知识结构梳理、搭建、评测、上线、30 天保修；30% / 40% / 30% 付款</td><td>额外数据源 / 集成、模型 / 云资源</td></tr>
+                <tr><td><b>增场景</b></td><td>第 2 个 +¥6–8 万<br>第 3 个 +¥5–7 万</td><td>随项目</td><td>同一知识域内的新业务问题</td><td>跨知识域、额外集成</td></tr>
+                <tr><td><b>月度保障</b></td><td>¥5,000–10,000 / 月</td><td>按月，30 天前可停</td><td>1–2 人天 / 月：监控、调优、小知识更新、月报；1 个工作日响应</td><td>新场景、新系统集成、7×24</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="footnote">价格带不是最终报价；含税可开票；江浙沪上门差旅含在项目价内，其他地区实报实销；模型 API 与云资源按实际用量代付，不赚差价；最终报价以诊断后书面范围为准；报价 30 天有效。</p>
+        </div>
+      </section>
+
+      <section class="sec" id="c-why">
+        <aside class="anno">
+          <span class="anno-kicker">05 · 为什么是我们</span>
+          <b>任务：用三句话解释差异，不重复方法长文</b>
+          <p>异议：凭什么比自助工具 / 大厂 / 外包强？</p>
+          <p>移动端：三点纵向；本体图样例放最后，允许跳过。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">为什么是我们</p>
+          <h2>底座让 Agent 答得准，<br>Agent 让底座看得见</h2>
+          <div class="grid4">
+            <article><h3>先理知识，不先搭界面</h3><p>对象、关系、规则、权限先显式化；否则 demo 好看，上不了生产。</p></article>
+            <article><h3>按场景交付，不按人天</h3><p>一个业务问题、一类用户、一个知识域、一个入口；报价与验收都围绕它。</p></article>
+            <article><h3>敢说不做</h3><p>诊断如果判断现在不值得做，会给出理由，不硬推项目。</p></article>
+            <article><h3>小团队，负责人亲自交付</h3><p>每季只接 2–3 个项目；30 天保修；决策链短。人数不公开。</p></article>
+          </div>
+          <div class="ph method-ph" style="margin-top: 20px;">本体图样例占位<br>对象 / 关系 / 规则 / 权限</div>
+        </div>
+      </section>
+
+      <section class="sec" id="c-boundary">
+        <aside class="anno">
+          <span class="anno-kicker">06 · 边界</span>
+          <b>任务：把「不接」放在 FAQ 之前，主动筛客</b>
+          <p>异议：我这种情况接不接？</p>
+          <p>移动端：两列改单列；「不建议做」用清单，不用长段落。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">边界</p>
+          <h2>先说清楚我们不做什么</h2>
+          <div class="split">
+            <div>
+              <h3>不接</h3>
+              <ul class="checklist">
+                <li>纯官网 / 小程序 / 流程自动化</li>
+                <li>只买 SaaS / 模板 / 低价外包</li>
+                <li>纯人力驻场 / 7×24 运维</li>
+                <li>demo-only，不准备上生产</li>
+              </ul>
+            </div>
+            <div>
+              <h3>什么时候不建议做</h3>
+              <ul class="checklist">
+                <li>知识只在一两个人脑子里，且不愿投入梳理</li>
+                <li>期望一次上线就全自动，不接受评测和迭代</li>
+                <li>没有可验收的业务问题，只想「先上一个 AI」</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec faq" id="c-faq">
+        <aside class="anno">
+          <span class="anno-kicker">07 · FAQ</span>
+          <b>任务：只回答价格、安全、失败三类最后异议</b>
+          <p>异议：数据安全 / 费用 / 失败怎么办？</p>
+          <p>移动端：手风琴默认全关；首项可默认展开，演示交互。</p>
+        </aside>
+        <div class="wrap">
+          <p class="eyebrow">常见问题</p>
+          <h2>最后几个问题</h2>
+          <details open>
+            <summary>数据安全怎么保证？</summary>
+            <p>最小必要、权限边界，可用客户自己的账号或环境；具体边界在诊断时写清楚。</p>
+          </details>
+          <details>
+            <summary>为什么比 Dify / Coze 贵？</summary>
+            <p>自助工具能搭 demo，但知识层没人理。我们交付的是知识结构 + 可验收的生产 Agent，不是一套模板。</p>
+          </details>
+          <details>
+            <summary>模型 / 云费用怎么算？</summary>
+            <p>按实际用量代付，不赚差价；也可以直接用客户自己的账号。服务费与资源费分开。</p>
+          </details>
+          <details>
+            <summary>交付失败怎么办？</summary>
+            <p>1 周免费整改；仍不达标可终止，不付第二阶段。第一阶段费用不退。</p>
+          </details>
+          <details>
+            <summary>能保证效果吗？</summary>
+            <p>开工前定 30–50 条评测问题 + 标准答案；≥80% 正确、零关键错误、UAT 通过才算验收。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="sec band" id="c-cta">
+        <aside class="anno">
+          <span class="anno-kicker">08 · 收口</span>
+          <b>任务：把自检结果接回同一个 CTA</b>
+          <p>异议：下一步是什么？</p>
+          <p>移动端：底部 sticky CTA 常驻；收口区再重复一次。</p>
+        </aside>
+        <div class="wrap">
+          <h2>带着一个具体场景来，<br>30 分钟判断值不值得做</h2>
+          <p class="lede">如果现在不适合，我们会直说；如果适合，你会带着场景图、知识清单和报价范围离开。</p>
+          <div class="cta-row">
+            <button class="btn" data-cta>预约 30 分钟场景诊断</button>
+            <span class="micro">企业微信 / 飞书 / 电话 / 邮箱</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span>序构 AI</span>
+        <span>备案信息占位 · 隐私说明 · 样例标注 · © 2026</span>
+      </footer>
+    </div>
+  </div>
+
+</main>
+
+<aside class="c-rail" aria-label="常驻预约入口">
+  <p class="eyebrow">先判断</p>
+  <h3>这个场景值不值得做？</h3>
+  <p class="micro">30 分钟，带着交付物离开。免费，每周最多 5 场。</p>
+  <button class="btn small" data-cta>预约诊断</button>
+</aside>
+
+<div class="c-sticky">
+  <span><b>30 分钟场景诊断</b><br><span class="micro">免费 · 每周 5 场</span></span>
+  <button class="btn small" data-cta>预约</button>
+</div>
+
+<dialog id="ctaDialog">
+  <div class="dialog-inner">
+    <div class="dialog-head">
+      <h3>预约 30 分钟场景诊断</h3>
+      <button type="button" class="dialog-close" aria-label="关闭">×</button>
+    </div>
+    <p class="micro">选一个你方便的方式。加企业微信时备注「诊断」。</p>
+    <div class="qr">企业微信活码占位</div>
+    <ul class="contact-list">
+      <li><span>企业微信</span><b>扫码添加</b></li>
+      <li><span>飞书</span><b>名片占位</b></li>
+      <li><span>电话</span><b>138-0000-0000</b></li>
+      <li><span>邮箱</span><b>hello@xugou.example</b></li>
+    </ul>
+    <p class="micro" style="margin-top: 14px;">加人后 1 个工作日内回复；5 个工作日内约腾讯会议。诊断不预筛、不填长表单。</p>
+  </div>
+</dialog>
+
+<div class="proto-bar" role="group" aria-label="原型控制">
+  <button type="button" id="prevVariant" aria-label="上一个方案">‹</button>
+  <div class="bar-label"><b id="barKey">A</b> · <span id="barName">单页叙事</span></div>
+  <button type="button" id="nextVariant" aria-label="下一个方案">›</button>
+  <span class="bar-divider"></span>
+  <button type="button" class="bar-toggle" id="notesToggle" aria-pressed="false">批注</button>
+  <button type="button" class="bar-toggle" id="foldToggle" aria-pressed="false">折叠线</button>
+</div>
+
+<script>
+  const VARIANTS = {
+    A: { name: '单页叙事' },
+    B: { name: '两页分工' },
+    C: { name: '诊断优先' }
+  };
+  const KEYS = ['A', 'B', 'C'];
+
+  function activeKey() {
+    const params = new URLSearchParams(location.search);
+    const k = (params.get('variant') || 'B').toUpperCase();
+    return KEYS.includes(k) ? k : 'B';
+  }
+
+  function setVariant(key, writeUrl) {
+    if (!KEYS.includes(key)) key = 'B';
+    document.body.dataset.variant = key;
+    document.querySelectorAll('.variant').forEach(el => {
+      el.classList.toggle('active', el.dataset.variant === key);
+    });
+    document.getElementById('barKey').textContent = key;
+    document.getElementById('barName').textContent = VARIANTS[key].name;
+    if (typeof updateSticky === 'function') updateSticky();
+    if (writeUrl) {
+      try {
+        const url = new URL(location.href);
+        url.searchParams.set('variant', key);
+        history.replaceState(null, '', url.toString());
+      } catch (e) {
+        /* file:// history restrictions — ignore */
+      }
+    }
+  }
+
+  function cycle(delta) {
+    const current = activeKey();
+    const idx = KEYS.indexOf(current);
+    setVariant(KEYS[(idx + delta + KEYS.length) % KEYS.length], true);
+  }
+
+  document.getElementById('prevVariant').addEventListener('click', () => cycle(-1));
+  document.getElementById('nextVariant').addEventListener('click', () => cycle(1));
+
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); cycle(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); cycle(1); }
+  });
+
+  const notesToggle = document.getElementById('notesToggle');
+  notesToggle.addEventListener('click', () => {
+    const on = document.body.classList.toggle('notes');
+    notesToggle.setAttribute('aria-pressed', String(on));
+  });
+
+  const foldToggle = document.getElementById('foldToggle');
+  foldToggle.addEventListener('click', () => {
+    const on = document.body.classList.toggle('show-fold');
+    foldToggle.setAttribute('aria-pressed', String(on));
+  });
+
+  function showPage(name) {
+    document.querySelectorAll('[data-page-panel]').forEach(panel => {
+      panel.hidden = panel.dataset.pagePanel !== name;
+    });
+    document.querySelectorAll('.proto-subnav [data-page-link]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.pageLink === name);
+    });
+    const subnav = document.querySelector('.proto-subnav');
+    if (subnav) subnav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-page-link]');
+    if (link) {
+      e.preventDefault();
+      showPage(link.dataset.pageLink);
+    }
+  });
+
+  const TRIAGE_COPY = {
+    a: '建议起点：先做 30 分钟场景诊断，定位知识缺口和权限边界；多数情况不用重做整套知识库。',
+    b: '建议起点：先做独立知识结构梳理（¥5–8 万，2–4 周），再决定是否进入单场景项目。',
+    c: '建议起点：先下载诊断纪要与评测报告样例；有一个具体业务问题时再预约诊断。'
+  };
+  document.querySelectorAll('[data-triage]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-triage]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const result = document.querySelector('.triage-result');
+      if (result) result.textContent = TRIAGE_COPY[btn.dataset.triage] || '选一种情况，看看建议的起点。';
+    });
+  });
+
+  const dialog = document.getElementById('ctaDialog');
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-cta]')) {
+      e.preventDefault();
+      document.body.classList.add('dialog-open');
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    }
+  });
+  dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('close', () => document.body.classList.remove('dialog-open'));
+
+  function updateSticky() {
+    const site = document.querySelector('.variant.active .site');
+    const scrolledIntoPage = site ? site.getBoundingClientRect().top < 0 : false;
+    document.body.classList.toggle('c-scrolled', scrolledIntoPage);
+  }
+  window.addEventListener('scroll', updateSticky, { passive: true });
+  window.addEventListener('resize', updateSticky);
+
+  if (window.matchMedia('(max-width: 760px)').matches) {
+    document.querySelector('.proto-brief').removeAttribute('open');
+  }
+
+  setVariant(activeKey(), false);
+  updateSticky();
+</script>
+</body>
+</html>
