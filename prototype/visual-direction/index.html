@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原型 · 视觉方向 · 序构 AI</title>
+<style>
+  /* ============================================================
+     PROTOTYPE — three visual directions for the homepage first
+     screen. Throwaway. Switch with ?variant=A|B|C or the bottom bar.
+     Same copy in all three; only the visual system changes.
+     ============================================================ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #e8e5de;
+    color: #1b1b1b;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+  a { color: inherit; }
+  h1, h2, h3, h4, p, dl, dd, figure { margin: 0; }
+  :focus-visible { outline: 2px solid #1b1b1b; outline-offset: 3px; }
+
+  /* --- review chrome ------------------------------------------------ */
+  .proto-ribbon {
+    position: fixed; top: 12px; left: 12px; z-index: 1000;
+    background: #151515; color: #fff;
+    font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .1em; padding: 6px 9px; border-radius: 2px;
+  }
+  .review {
+    max-width: 1320px; margin: 0 auto;
+    padding: 62px 32px 12px;
+  }
+  .review-kicker {
+    font: 600 10px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .14em; text-transform: uppercase; color: #6f6a60;
+  }
+  .review h1 {
+    font-size: clamp(32px, 4.2vw, 52px);
+    line-height: 1.12; letter-spacing: -.035em;
+    margin: 8px 0 14px; max-width: 22ch;
+  }
+  .review-lede {
+    font-size: 17px; line-height: 1.8; color: #3f3d38; max-width: 74ch;
+  }
+  .review-brief {
+    margin-top: 26px; border: 1px dashed #b8b2a5; background: #fbfaf6;
+    padding: 15px 18px;
+  }
+  .review-brief summary {
+    cursor: pointer; font-weight: 700; font-size: 13.5px; letter-spacing: .01em;
+  }
+  .review-brief summary::marker { color: #8d877b; }
+  .brief-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    margin-top: 16px;
+  }
+  .brief-grid h2 {
+    font-size: 12px; letter-spacing: .04em; margin-bottom: 5px;
+  }
+  .brief-grid p {
+    font-size: 12.5px; line-height: 1.7; color: #4a4740;
+  }
+  .brief-grid b { color: #1b1b1b; }
+  .review-note {
+    margin-top: 14px; font-size: 11.5px; line-height: 1.7; color: #6f6a60;
+  }
+  .dir-index {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-top: 26px;
+  }
+  .dir-card {
+    display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto auto;
+    column-gap: 12px; row-gap: 3px; align-items: start; text-align: left;
+    padding: 14px 15px; border: 1px solid #c9c4b8; background: #fbfaf6;
+    color: #1b1b1b; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .dir-card:hover { background: #fff; border-color: #9c968a; }
+  .dir-card.active {
+    background: #fff; border-color: #1b1b1b; box-shadow: inset 0 0 0 1px #1b1b1b;
+  }
+  .dir-letter {
+    grid-row: 1 / span 4; align-self: start;
+    font: 700 32px/.95 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: -.06em;
+  }
+  .dir-name { font-size: 14px; font-weight: 700; line-height: 1.4; }
+  .dir-line { font-size: 12px; line-height: 1.5; color: #4a4740; }
+  .dir-tags { font-size: 10.5px; line-height: 1.5; color: #6f6a60; letter-spacing: .02em; }
+  .dir-cost { font: 500 9.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #8a8478; letter-spacing: .03em; }
+  .recommend {
+    display: grid; grid-template-columns: 150px 1fr; gap: 18px;
+    margin-top: 18px; padding: 16px 18px; background: #171717; color: #f1eee6;
+  }
+  .recommend .review-kicker { color: #a7a196; }
+  .recommend p {
+    font-size: 13px; line-height: 1.75; color: #e5e1d6;
+  }
+  .recommend b { color: #fff; }
+  .recommend code {
+    font: 500 .92em/1.4 ui-monospace, Menlo, Consolas, monospace;
+    background: #2c2c2a; color: #fff; padding: 1px 4px;
+  }
+
+  /* --- shared prototype shell -------------------------------------- */
+  .dir { max-width: 1320px; margin: 0 auto; padding: 34px 32px 54px; display: none; }
+  .dir.active { display: block; }
+  .dir-head {
+    display: grid; grid-template-columns: 104px 1fr; gap: 22px;
+    border-top: 1px solid #b8b2a5; padding-top: 22px;
+  }
+  .dir-head-letter {
+    font: 700 70px/.85 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: -.07em;
+  }
+  .dir-head h2 {
+    font-size: clamp(26px, 3vw, 34px); line-height: 1.18; letter-spacing: -.03em;
+    margin: 1px 0 7px;
+  }
+  .dir-head .dir-desc {
+    font-size: 14px; line-height: 1.75; color: #4a4740; max-width: 76ch;
+  }
+  .spec-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    margin-top: 22px; border-top: 1px solid #c9c4b8; border-left: 1px solid #c9c4b8;
+  }
+  .spec-cell {
+    padding: 11px 13px 12px; border-right: 1px solid #c9c4b8; border-bottom: 1px solid #c9c4b8;
+    background: #fbfaf6;
+  }
+  .spec-cell dt {
+    font: 600 9px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .13em; text-transform: uppercase; color: #7c766a; margin-bottom: 3px;
+  }
+  .spec-cell dd { font-size: 12px; line-height: 1.65; color: #3f3d38; }
+  .spec-cell dd b { color: #1b1b1b; }
+  .moodboard {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px;
+    margin-top: 18px;
+  }
+  .mood-tile {
+    display: flex; flex-direction: column; min-height: 156px;
+    border: 1px solid #c9c4b8; background: #fff; overflow: hidden;
+  }
+  .mood-cap {
+    margin-top: auto; padding: 7px 9px; border-top: 1px solid #e4dfd4;
+    font: 500 9px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .03em; color: #6f6a60;
+  }
+  .screens {
+    display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 20px;
+    align-items: start; margin-top: 18px;
+  }
+  .desktop-frame, .phone-frame { margin: 0; }
+  .browser-bar {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 10px; border-bottom: 1px solid #ddd8cc; background: #f4f2ec;
+    font: 500 9px/1.4 ui-monospace, Menlo, Consolas, monospace; color: #7a7468;
+  }
+  .browser-dots { display: flex; gap: 4px; }
+  .browser-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: #c9c4b8; }
+  .browser-url {
+    flex: 1; background: #fff; border: 1px solid #ddd8cc; padding: 2px 7px;
+    color: #5a564e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .browser-tag { white-space: nowrap; color: #8d877b; }
+  .phone-bezel {
+    border: 8px solid #1b1b1b; border-radius: 30px; overflow: hidden;
+    background: #1b1b1b;
+  }
+  .wechat-bar {
+    height: 44px; background: #f7f7f7; color: #111; border-bottom: 1px solid #e5e5e5;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 13px; font-size: 12px;
+  }
+  .wechat-left { font-size: 19px; line-height: 1; width: 26px; }
+  .wechat-title { font-weight: 600; letter-spacing: .01em; }
+  .wechat-right { font-size: 15px; letter-spacing: 2px; width: 26px; text-align: right; }
+  .phone-screen { height: 800px; overflow: hidden; background: #fff; position: relative; }
+  .fold-note {
+    display: flex; justify-content: space-between; gap: 10px;
+    margin-top: 7px; font: 500 9px/1.5 ui-monospace, Menlo, Consolas, monospace;
+    color: #7c766a; letter-spacing: .02em;
+  }
+  .system-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    margin: 26px 0 0;
+  }
+  .system-head h3 {
+    font-size: 18px; line-height: 1.3; letter-spacing: -.01em;
+  }
+  .system-head p {
+    font: 500 9.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #7c766a;
+  }
+  .system-wrap { margin-top: 9px; border: 1px solid #c9c4b8; background: #fff; }
+  .tradeoff {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 14px;
+  }
+  .tradeoff > div {
+    border: 1px solid #c9c4b8; background: #fbfaf6; padding: 13px 15px;
+  }
+  .tradeoff h4 {
+    font: 600 9px/1.5 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: .12em; text-transform: uppercase; color: #7c766a; margin: 0 0 4px;
+  }
+  .tradeoff p { font-size: 11.5px; line-height: 1.65; color: #3f3d38; }
+
+  /* --- shared mood board bits -------------------------------------- */
+  .mood-swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 8px; }
+  .mood-swatch {
+    display: block; height: 46px; border: 1px solid rgba(0,0,0,.08);
+    position: relative;
+  }
+  .mood-swatch::after {
+    content: attr(data-hex);
+    position: absolute; left: 2px; bottom: 2px;
+    font: 500 6.5px/1 ui-monospace, Menlo, Consolas, monospace;
+    color: rgba(0,0,0,.55); letter-spacing: -.02em;
+  }
+  .mood-palette-names {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px;
+    padding: 0 8px 8px; font: 500 7px/1.3 ui-monospace, Menlo, Consolas, monospace;
+    color: #6f6a60;
+  }
+  .mood-type { padding: 12px 12px 10px; }
+  .mood-type .mt-small {
+    font: 600 7.5px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: .1em; text-transform: uppercase; color: #8a8478; margin-bottom: 8px;
+  }
+  .mood-ref { padding: 11px 12px; }
+  .mood-ref p { font-size: 10px; line-height: 1.55; color: #4a4740; }
+  .mood-ref p + p { margin-top: 5px; }
+  .mood-ref .ref-label {
+    font: 600 7px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: .1em; text-transform: uppercase; color: #8a8478;
+    margin-bottom: 6px;
+  }
+  .mood-avoid { padding: 11px 12px; }
+  .mood-avoid p { font-size: 9.5px; line-height: 1.6; color: #7a7468; }
+  .mood-avoid p::before { content: "×"; color: #a39b8d; margin-right: 4px; }
+  .mood-avoid .ref-label {
+    font: 600 7px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: .1em; text-transform: uppercase; color: #8a8478;
+    margin-bottom: 6px;
+  }
+
+  /* ================================================================
+     DIRECTION A — 编辑部 · 判断书
+     ================================================================ */
+  .dir-a {
+    --a-paper: #fbf8f1;
+    --a-ink: #17140e;
+    --a-muted: #6c6558;
+    --a-line: #dcd3c2;
+    --a-accent: #8e3b24;
+    --a-wash: #f3ede0;
+    --a-serif: "Songti SC", "STSong", "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif;
+    --a-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --a-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .dir-a .a-mock {
+    background: var(--a-paper); color: var(--a-ink);
+    font-family: var(--a-sans); position: relative; overflow: hidden;
+  }
+  .dir-a .a-nav {
+    display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    padding: 15px 32px; border-bottom: 1px solid var(--a-line);
+    position: relative; z-index: 2;
+  }
+  .dir-a .a-brand {
+    font-family: var(--a-serif); font-weight: 700; font-size: 18px; letter-spacing: .1em;
+  }
+  .dir-a .a-nav-links {
+    display: flex; gap: 18px; font-size: 11px; color: var(--a-muted); letter-spacing: .02em;
+  }
+  .dir-a .a-nav-cta {
+    border: 1px solid var(--a-ink); background: transparent; color: var(--a-ink);
+    padding: 6px 11px; font-size: 10.5px; font-weight: 600; white-space: nowrap;
+  }
+  .dir-a .a-hero { padding: 50px 32px 0; position: relative; z-index: 2; }
+  .dir-a .a-ghost {
+    position: absolute; top: 6px; right: 24px; z-index: 0;
+    font: 700 138px/.8 var(--a-serif); letter-spacing: -.09em;
+    color: #eee5d4; pointer-events: none; user-select: none;
+  }
+  .dir-a .a-kicker { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+  .dir-a .a-kicker::before { content: ""; width: 34px; height: 1px; background: var(--a-accent); }
+  .dir-a .a-eyebrow {
+    font: 600 8.5px/1.4 var(--a-mono); letter-spacing: .16em;
+    text-transform: uppercase; color: var(--a-accent);
+  }
+  .dir-a .a-h1 {
+    position: relative; z-index: 1;
+    font-family: var(--a-serif); font-weight: 700;
+    font-size: 52px; line-height: 1.13; letter-spacing: -.035em;
+    margin: 0 0 18px; max-width: 700px;
+  }
+  .dir-a .a-h1 .a-latin { font-family: var(--a-sans); font-weight: 650; letter-spacing: -.02em; }
+  .dir-a .a-lede {
+    font-size: 14.5px; line-height: 1.85; color: #3e392f;
+    max-width: 540px; margin: 0 0 22px;
+  }
+  .dir-a .a-cta-row { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 8px; }
+  .dir-a .a-btn {
+    min-height: 45px; padding: 0 19px; background: var(--a-ink);
+    border: 1px solid var(--a-ink); color: #fff;
+    font-size: 12.5px; font-weight: 600; letter-spacing: .02em;
+  }
+  .dir-a .a-link {
+    font-size: 11.5px; color: var(--a-ink); text-decoration: none;
+    border-bottom: 1px solid var(--a-line); padding-bottom: 2px;
+  }
+  .dir-a .a-micro { font-size: 10.5px; line-height: 1.6; color: var(--a-muted); }
+  .dir-a .a-trust {
+    margin-top: 30px; border-top: 1px solid var(--a-line);
+    padding: 11px 0 15px;
+    font: 500 9px/1.65 var(--a-mono); letter-spacing: .05em; color: var(--a-muted);
+  }
+  .dir-a .a-trust b { color: var(--a-ink); font-weight: 600; }
+  .dir-a .a-system {
+    padding: 32px 32px 30px; border-top: 1px solid var(--a-line);
+    background: var(--a-paper); position: relative; z-index: 1;
+  }
+  .dir-a .a-system .a-kicker { margin-bottom: 9px; }
+  .dir-a .a-system-h {
+    font-family: var(--a-serif); font-size: 27px; line-height: 1.2;
+    letter-spacing: -.025em; margin: 0 0 5px;
+  }
+  .dir-a .a-system-lede { font-size: 11.5px; line-height: 1.7; color: #4b453a; margin: 0 0 15px; max-width: 600px; }
+  .dir-a .a-table { width: 100%; border-collapse: collapse; }
+  .dir-a .a-table th {
+    text-align: left; font: 600 8px/1.4 var(--a-mono); letter-spacing: .12em;
+    text-transform: uppercase; color: var(--a-muted);
+    border-bottom: 1px solid var(--a-ink); padding: 0 9px 7px 0;
+  }
+  .dir-a .a-table td {
+    border-bottom: 1px solid var(--a-line); padding: 11px 9px 11px 0;
+    vertical-align: top; font-size: 11px; line-height: 1.45; color: #3e392f;
+  }
+  .dir-a .a-table td:first-child {
+    font: 600 8.5px/1.5 var(--a-mono); letter-spacing: .06em;
+    color: var(--a-muted); white-space: nowrap;
+  }
+  .dir-a .a-table td b { display: block; color: var(--a-ink); font-size: 11.5px; font-weight: 650; }
+  .dir-a .a-table td .a-sub { display: block; margin-top: 2px; font-size: 9.5px; color: var(--a-muted); }
+  .dir-a .a-table .a-price {
+    font-family: var(--a-serif); font-size: 17px; font-weight: 700;
+    white-space: nowrap; color: var(--a-ink);
+  }
+  .dir-a .a-table .a-act { text-align: right; white-space: nowrap; }
+  .dir-a .a-table .a-act span { color: var(--a-accent); border-bottom: 1px solid var(--a-accent); font-size: 10.5px; }
+  .dir-a .a-footnote { margin-top: 11px; font-size: 9px; line-height: 1.65; color: var(--a-muted); }
+  .dir-a .a-phone .a-nav { padding: 13px 20px; }
+  .dir-a .a-phone .a-brand { font-size: 17px; }
+  .dir-a .a-phone .a-nav-links { display: none; }
+  .dir-a .a-phone .a-nav-cta { font-size: 10px; padding: 5px 9px; }
+  .dir-a .a-phone .a-hero { padding: 27px 20px 0; }
+  .dir-a .a-phone .a-ghost { font-size: 92px; top: -2px; right: 12px; }
+  .dir-a .a-phone .a-kicker { margin-bottom: 12px; }
+  .dir-a .a-phone .a-eyebrow { font-size: 8px; letter-spacing: .12em; }
+  .dir-a .a-phone .a-h1 { font-size: 37px; line-height: 1.18; margin-bottom: 15px; }
+  .dir-a .a-phone .a-lede { font-size: 13px; line-height: 1.85; margin-bottom: 20px; }
+  .dir-a .a-phone .a-cta-row { gap: 10px; margin-bottom: 8px; }
+  .dir-a .a-phone .a-btn { min-height: 48px; width: 100%; font-size: 13px; }
+  .dir-a .a-phone .a-link { font-size: 11px; }
+  .dir-a .a-phone .a-micro { font-size: 10px; }
+  .dir-a .a-phone .a-trust { margin-top: 25px; padding: 10px 0 12px; font-size: 8.5px; }
+  .dir-a .a-phone .a-trust span { display: block; }
+  .dir-a .a-phone .a-trust span + span { margin-top: 2px; }
+  .dir-a .mood-type .mt-display {
+    font-family: var(--a-serif); font-weight: 700; font-size: 25px; line-height: 1.16;
+    letter-spacing: -.04em; color: var(--a-ink);
+  }
+  .dir-a .mood-type .mt-display2 {
+    font-family: var(--a-serif); font-weight: 700; font-size: 25px; line-height: 1.16;
+    letter-spacing: -.04em; color: var(--a-ink); margin-bottom: 9px;
+  }
+  .dir-a .mood-type .mt-body {
+    font-size: 10px; line-height: 1.6; color: var(--a-muted);
+  }
+  .dir-a .mood-texture {
+    position: relative; background: var(--a-paper); flex: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dir-a .mood-texture .rule { position: absolute; left: 12px; right: 12px; top: 26px; height: 1px; background: var(--a-line); }
+  .dir-a .mood-seal {
+    width: 48px; height: 48px; background: var(--a-accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--a-serif); font-size: 13px; letter-spacing: .08em;
+    transform: rotate(-2deg); outline: 1px solid var(--a-accent); outline-offset: 3px;
+  }
+  .dir-a .mood-texture .paper-note {
+    position: absolute; bottom: 14px; left: 12px; right: 12px;
+    font: 500 7.5px/1.5 var(--a-mono); color: #8a8478; letter-spacing: .04em;
+  }
+  .dir-a .ref-label, .dir-a .mood-ref .ref-label { color: var(--a-accent); }
+
+  /* ================================================================
+     DIRECTION B — 结构图纸
+     ================================================================ */
+  .dir-b {
+    --b-paper: #eef1ed;
+    --b-ink: #0d1b18;
+    --b-green: #1f4d45;
+    --b-accent: #d4552f;
+    --b-grid: #c7d2cc;
+    --b-muted: #5e6e67;
+    --b-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --b-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .dir-b .b-mock {
+    background: var(--b-paper); color: var(--b-ink);
+    font-family: var(--b-sans); position: relative; overflow: hidden;
+  }
+  .dir-b .b-mock::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(31,77,69,.075) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(31,77,69,.075) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  .dir-b .b-mock::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 66%; width: 1px;
+    background: rgba(31,77,69,.14); pointer-events: none;
+  }
+  .dir-b .b-nav {
+    position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; padding: 12px 26px; border-bottom: 1px solid var(--b-grid);
+    background: rgba(238,241,237,.88);
+  }
+  .dir-b .b-brand { font-size: 14px; font-weight: 800; letter-spacing: .01em; }
+  .dir-b .b-brand span {
+    font: 500 8px/1.4 var(--b-mono); letter-spacing: .12em;
+    color: var(--b-muted); margin-left: 7px;
+  }
+  .dir-b .b-nav-mid {
+    font: 500 8px/1.4 var(--b-mono); letter-spacing: .1em; color: var(--b-muted);
+    text-transform: uppercase;
+  }
+  .dir-b .b-nav-cta {
+    border: 1px solid var(--b-ink); background: var(--b-ink); color: #fff;
+    padding: 6px 10px; font-size: 10px; font-weight: 600; white-space: nowrap;
+  }
+  .dir-b .b-specbar {
+    position: relative; z-index: 2; display: flex; justify-content: space-between; gap: 10px;
+    padding: 6px 26px; border-bottom: 1px solid var(--b-grid);
+    font: 500 8px/1.4 var(--b-mono); letter-spacing: .08em; color: var(--b-muted);
+    text-transform: uppercase; background: rgba(238,241,237,.65);
+  }
+  .dir-b .b-hero { position: relative; z-index: 2; padding: 44px 28px 24px; }
+  .dir-b .b-eyebrow {
+    font: 600 8.5px/1.4 var(--b-mono); letter-spacing: .14em;
+    text-transform: uppercase; color: var(--b-accent); margin-bottom: 12px;
+  }
+  .dir-b .b-h1 {
+    font-size: 42px; line-height: 1.14; letter-spacing: -.035em;
+    font-weight: 650; margin: 0 0 14px; max-width: 520px;
+  }
+  .dir-b .b-lede {
+    font-size: 13.5px; line-height: 1.8; color: #33433f;
+    max-width: 520px; margin: 0 0 20px;
+  }
+  .dir-b .b-cta-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 9px; }
+  .dir-b .b-btn {
+    position: relative; background: var(--b-green); color: #fff;
+    border: 1px solid var(--b-green); padding: 0 17px; min-height: 44px;
+    font-size: 12px; font-weight: 600;
+  }
+  .dir-b .b-btn::before, .dir-b .b-btn::after {
+    content: ""; position: absolute; width: 5px; height: 5px; border: 1px solid var(--b-accent);
+  }
+  .dir-b .b-btn::before { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+  .dir-b .b-btn::after { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+  .dir-b .b-link {
+    font: 600 10px/1.4 var(--b-mono); letter-spacing: .05em; color: var(--b-green);
+    border-bottom: 1px solid var(--b-green); padding-bottom: 2px; text-decoration: none;
+  }
+  .dir-b .b-micro { font: 500 9px/1.55 var(--b-mono); color: var(--b-muted); }
+  .dir-b .b-trust { margin-top: 24px; border-top: 1px solid var(--b-ink); max-width: 560px; }
+  .dir-b .b-trust-row {
+    display: grid; grid-template-columns: 24px 92px 1fr; gap: 7px;
+    padding: 6px 0; border-bottom: 1px solid var(--b-grid);
+    font-size: 10px; line-height: 1.5; align-items: baseline;
+  }
+  .dir-b .b-trust-row .idx { font: 600 8px/1.4 var(--b-mono); color: var(--b-accent); }
+  .dir-b .b-trust-row .lab { font: 600 8px/1.4 var(--b-mono); letter-spacing: .07em; color: var(--b-muted); text-transform: uppercase; }
+  .dir-b .b-trust-row .val { color: var(--b-ink); }
+  .dir-b .b-figure {
+    position: absolute; right: 18px; top: 44px; width: 260px;
+    opacity: .62; pointer-events: none;
+  }
+  .dir-b .b-figure svg { display: block; width: 100%; height: auto; }
+  .dir-b .b-system {
+    padding: 30px 28px 28px; border-top: 1px solid var(--b-grid);
+    background: rgba(238,241,237,.7); position: relative; z-index: 2;
+  }
+  .dir-b .b-system-h {
+    font-size: 25px; line-height: 1.22; letter-spacing: -.03em;
+    margin: 0 0 5px; font-weight: 650;
+  }
+  .dir-b .b-system-lede { font-size: 11.5px; line-height: 1.7; color: #33433f; margin: 0 0 10px; max-width: 600px; }
+  .dir-b .b-fig-wrap { border: 1px solid var(--b-grid); background: rgba(255,255,255,.42); padding: 8px; }
+  .dir-b .b-fig-wrap svg { display: block; width: 100%; height: auto; }
+  .dir-b .b-fig-cap {
+    display: flex; justify-content: space-between; gap: 10px;
+    margin-top: 5px; font: 500 7.5px/1.5 var(--b-mono);
+    color: var(--b-muted); letter-spacing: .05em; text-transform: uppercase;
+  }
+  .dir-b .b-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .dir-b .b-step { border-top: 1px solid var(--b-ink); padding-top: 7px; }
+  .dir-b .b-step .num { font: 600 8px/1.4 var(--b-mono); color: var(--b-accent); letter-spacing: .08em; }
+  .dir-b .b-step h4 { font-size: 12px; margin: 2px 0 2px; font-weight: 650; }
+  .dir-b .b-step p { font-size: 9.5px; line-height: 1.55; color: #4a5a55; margin: 0; }
+  .dir-b .b-phone .b-nav { padding: 11px 16px; }
+  .dir-b .b-nav-mid { display: none; }
+  .dir-b .b-phone .b-brand { font-size: 13px; }
+  .dir-b .b-phone .b-brand span { font-size: 7px; }
+  .dir-b .b-phone .b-nav-cta { font-size: 9px; padding: 5px 8px; }
+  .dir-b .b-phone .b-specbar { padding: 5px 16px; font-size: 7px; }
+  .dir-b .b-phone .b-hero { padding: 27px 16px 0; }
+  .dir-b .b-phone .b-eyebrow { font-size: 7.5px; letter-spacing: .1em; margin-bottom: 10px; }
+  .dir-b .b-phone .b-h1 { font-size: 35px; line-height: 1.18; margin-bottom: 13px; }
+  .dir-b .b-phone .b-lede { font-size: 12.5px; line-height: 1.8; margin-bottom: 19px; }
+  .dir-b .b-phone .b-cta-row { gap: 10px; }
+  .dir-b .b-phone .b-btn { min-height: 48px; width: 100%; font-size: 12px; }
+  .dir-b .b-phone .b-link { font-size: 9.5px; }
+  .dir-b .b-phone .b-micro { font-size: 8.5px; }
+  .dir-b .b-phone .b-trust { margin-top: 22px; }
+  .dir-b .b-phone .b-trust-row { grid-template-columns: 22px 76px 1fr; font-size: 9px; padding: 6px 0; }
+  .dir-b .b-phone .b-figure { display: none; }
+  .dir-b .b-phone .b-mock::after { left: 78%; }
+  .dir-b .mood-type .mt-display {
+    font-size: 21px; line-height: 1.18; letter-spacing: -.035em; font-weight: 650;
+    color: var(--b-ink);
+  }
+  .dir-b .mood-type .mt-display2 {
+    font-size: 21px; line-height: 1.18; letter-spacing: -.035em; font-weight: 650;
+    color: var(--b-ink); margin-bottom: 8px;
+  }
+  .dir-b .mood-type .mt-body {
+    font: 500 8px/1.55 var(--b-mono); color: var(--b-muted);
+    border-top: 1px solid var(--b-grid); padding-top: 6px;
+  }
+  .dir-b .mood-texture {
+    position: relative; flex: 1; background: var(--b-paper);
+    background-image:
+      linear-gradient(to right, rgba(31,77,69,.13) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(31,77,69,.13) 1px, transparent 1px);
+    background-size: 15px 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dir-b .mood-crosshair {
+    width: 52px; height: 52px; border: 1px solid var(--b-accent); border-radius: 50%;
+    position: relative; background: rgba(238,241,237,.5);
+  }
+  .dir-b .mood-crosshair::before, .dir-b .mood-crosshair::after {
+    content: ""; position: absolute; background: var(--b-accent);
+  }
+  .dir-b .mood-crosshair::before { left: 50%; top: -8px; bottom: -8px; width: 1px; }
+  .dir-b .mood-crosshair::after { top: 50%; left: -8px; right: -8px; height: 1px; }
+  .dir-b .mood-fig-label {
+    position: absolute; left: 8px; bottom: 7px;
+    font: 500 7px/1.4 var(--b-mono); letter-spacing: .08em; color: var(--b-muted);
+  }
+  .dir-b .mood-ref .ref-label { color: var(--b-accent); }
+
+  /* ================================================================
+     DIRECTION C — 案头顾问
+     ================================================================ */
+  .dir-c {
+    --c-paper: #f8f0e1;
+    --c-ink: #24201a;
+    --c-accent: #c25b33;
+    --c-olive: #6f7d5c;
+    --c-line: #e2d3bd;
+    --c-muted: #6f6353;
+    --c-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --c-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .dir-c .c-mock {
+    background: var(--c-paper); color: var(--c-ink);
+    font-family: var(--c-sans); position: relative; overflow: hidden;
+  }
+  .dir-c .c-mock::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(36,32,26,.08) .6px, transparent .6px);
+    background-size: 5px 5px; opacity: .45;
+  }
+  .dir-c .c-nav {
+    position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 15px 28px;
+  }
+  .dir-c .c-brand { font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+  .dir-c .c-nav-links { display: flex; gap: 16px; font-size: 11px; color: var(--c-muted); }
+  .dir-c .c-nav-cta {
+    border: 1.5px solid var(--c-ink); background: var(--c-ink); color: #fff;
+    border-radius: 999px; padding: 7px 13px; font-size: 10px; font-weight: 700;
+  }
+  .dir-c .c-hero-wrap { padding: 16px 28px 34px; position: relative; z-index: 2; }
+  .dir-c .c-card {
+    position: relative; background: #fffaf0;
+    border: 1.5px solid var(--c-ink); box-shadow: 7px 7px 0 var(--c-line);
+    padding: 38px 34px 30px; text-align: center;
+  }
+  .dir-c .c-card::before {
+    content: ""; position: absolute; top: -7px; left: 50%; transform: translateX(-50%) rotate(-1deg);
+    width: 82px; height: 13px; background: rgba(226,211,189,.8);
+    border-left: 1px dashed #c9b89f; border-right: 1px dashed #c9b89f;
+  }
+  .dir-c .c-eyebrow {
+    display: inline-block; font: 700 8px/1.4 var(--c-mono);
+    letter-spacing: .14em; text-transform: uppercase; color: var(--c-accent);
+    border: 1px solid var(--c-line); background: #fff; padding: 4px 8px;
+    margin-bottom: 16px;
+  }
+  .dir-c .c-h1 {
+    font-size: 43px; line-height: 1.16; letter-spacing: -.035em; font-weight: 800;
+    max-width: 620px; margin: 0 auto 14px;
+  }
+  .dir-c .c-h1 mark {
+    color: inherit; background: linear-gradient(transparent 64%, #f1c9a9 64%);
+    padding: 0 2px;
+  }
+  .dir-c .c-lede {
+    font-size: 13.5px; line-height: 1.85; color: #4a4137;
+    max-width: 520px; margin: 0 auto 21px;
+  }
+  .dir-c .c-cta-row { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 9px; }
+  .dir-c .c-btn {
+    background: var(--c-accent); color: #fff;
+    border: 1.5px solid var(--c-ink); border-radius: 999px;
+    min-height: 46px; padding: 0 22px; font-size: 12.5px; font-weight: 750;
+    box-shadow: 3px 3px 0 var(--c-ink);
+  }
+  .dir-c .c-link { font-size: 11px; color: var(--c-ink); border-bottom: 1px solid var(--c-ink); padding-bottom: 2px; text-decoration: none; }
+  .dir-c .c-micro { font-size: 10px; color: var(--c-muted); }
+  .dir-c .c-trust { display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; margin-top: 20px; }
+  .dir-c .c-chip {
+    border: 1px solid var(--c-line); background: #fff; padding: 5px 9px;
+    font-size: 9.5px; font-weight: 600; color: #4a4137;
+  }
+  .dir-c .c-trust-line {
+    flex-basis: 100%; font-size: 9px; color: var(--c-muted); margin-top: 1px;
+  }
+  .dir-c .c-system { padding: 34px 28px 30px; border-top: 1px solid var(--c-line); background: var(--c-paper); position: relative; z-index: 2; }
+  .dir-c .c-system-h { font-size: 30px; line-height: 1.2; letter-spacing: -.03em; font-weight: 800; margin: 0 0 5px; }
+  .dir-c .c-system-lede { font-size: 11.5px; line-height: 1.7; color: #4a4137; margin: 0 0 16px; max-width: 600px; }
+  .dir-c .c-proof-list { border-top: 1.5px solid var(--c-ink); }
+  .dir-c .c-proof-row {
+    display: grid; grid-template-columns: 30px 1fr auto; gap: 12px;
+    align-items: center; padding: 12px 0; border-bottom: 1px solid var(--c-line);
+  }
+  .dir-c .c-file {
+    position: relative; width: 26px; height: 32px; border: 1.5px solid var(--c-ink);
+    background: #fff; display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 3px; font: 700 6px/1 var(--c-mono);
+  }
+  .dir-c .c-file::before {
+    content: ""; position: absolute; top: -1.5px; right: -1.5px;
+    border-left: 7px solid transparent; border-bottom: 7px solid var(--c-ink);
+  }
+  .dir-c .c-proof-row h4 { font-size: 12.5px; line-height: 1.4; margin: 0 0 1px; font-weight: 750; }
+  .dir-c .c-proof-row p { font-size: 10px; line-height: 1.5; color: var(--c-muted); margin: 0; }
+  .dir-c .c-proof-row a {
+    font-size: 10px; color: var(--c-accent); border-bottom: 1px solid var(--c-accent);
+    text-decoration: none; white-space: nowrap;
+  }
+  .dir-c .c-note {
+    position: relative; max-width: 620px; margin-top: 22px;
+    background: #fffaf0; border: 1.5px solid var(--c-ink);
+    box-shadow: 5px 5px 0 var(--c-line); padding: 17px 19px;
+    transform: rotate(-.4deg);
+  }
+  .dir-c .c-note::before {
+    content: ""; position: absolute; top: -7px; left: 20px; width: 58px; height: 13px;
+    background: rgba(226,211,189,.85); transform: rotate(-3deg);
+  }
+  .dir-c .c-note p { font-size: 12.5px; line-height: 1.8; margin: 0; }
+  .dir-c .c-sig {
+    margin-top: 8px; font: 600 8px/1.4 var(--c-mono);
+    letter-spacing: .08em; color: var(--c-muted);
+  }
+  .dir-c .c-phone .c-nav { padding: 13px 18px; }
+  .dir-c .c-phone .c-brand { font-size: 16px; }
+  .dir-c .c-phone .c-nav-links { display: none; }
+  .dir-c .c-phone .c-nav-cta { font-size: 9px; padding: 5px 9px; }
+  .dir-c .c-phone .c-hero-wrap { padding: 10px 13px 22px; }
+  .dir-c .c-phone .c-card { padding: 30px 18px 23px; box-shadow: 5px 5px 0 var(--c-line); }
+  .dir-c .c-phone .c-card::before { width: 64px; height: 11px; top: -6px; }
+  .dir-c .c-phone .c-eyebrow { font-size: 7px; margin-bottom: 13px; padding: 3px 6px; }
+  .dir-c .c-phone .c-h1 { font-size: 33px; line-height: 1.2; margin-bottom: 12px; }
+  .dir-c .c-phone .c-lede { font-size: 12px; line-height: 1.8; margin-bottom: 18px; }
+  .dir-c .c-phone .c-cta-row { gap: 9px; }
+  .dir-c .c-phone .c-btn { width: 100%; min-height: 48px; font-size: 12px; }
+  .dir-c .c-phone .c-link { font-size: 10px; }
+  .dir-c .c-phone .c-micro { font-size: 9px; }
+  .dir-c .c-phone .c-trust { margin-top: 17px; gap: 5px; }
+  .dir-c .c-phone .c-chip { font-size: 8.5px; padding: 4px 7px; }
+  .dir-c .c-phone .c-trust-line { font-size: 8px; }
+  .dir-c .mood-type .mt-display {
+    font-size: 22px; line-height: 1.18; letter-spacing: -.04em; font-weight: 800;
+    color: var(--c-ink);
+  }
+  .dir-c .mood-type .mt-display2 {
+    font-size: 22px; line-height: 1.18; letter-spacing: -.04em; font-weight: 800;
+    color: var(--c-ink); margin-bottom: 8px;
+  }
+  .dir-c .mood-type .mt-display2 mark {
+    background: linear-gradient(transparent 62%, #f1c9a9 62%); color: inherit; padding: 0 2px;
+  }
+  .dir-c .mood-type .mt-body { font-size: 9px; line-height: 1.6; color: var(--c-muted); }
+  .dir-c .mood-texture {
+    position: relative; flex: 1; background: var(--c-paper);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dir-c .mood-note {
+    position: relative; width: 78%; background: #fffaf0; border: 1.5px solid var(--c-ink);
+    box-shadow: 4px 4px 0 var(--c-line); padding: 13px 11px; transform: rotate(-2deg);
+    font-size: 9px; line-height: 1.6;
+  }
+  .dir-c .mood-note::before {
+    content: ""; position: absolute; top: -6px; left: 50%; transform: translateX(-50%) rotate(2deg);
+    width: 44px; height: 10px; background: rgba(226,211,189,.9);
+  }
+  .dir-c .mood-stamp {
+    position: absolute; right: 7px; bottom: 6px;
+    border: 1px solid var(--c-accent); color: var(--c-accent);
+    font: 700 6px/1.2 var(--c-mono); letter-spacing: .08em;
+    padding: 3px 4px; transform: rotate(-6deg);
+  }
+  .dir-c .mood-ref .ref-label { color: var(--c-accent); }
+
+  /* --- bottom switcher --------------------------------------------- */
+  .proto-bar {
+    position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    background: #171717; color: #fff; padding: 6px 8px;
+    border-radius: 999px; z-index: 1100;
+    box-shadow: 0 8px 28px rgba(0,0,0,.28);
+    font-size: 12px;
+  }
+  .proto-bar button {
+    background: transparent; color: #fff; border: 0;
+    padding: 6px 9px; border-radius: 999px; line-height: 1;
+  }
+  .proto-bar button:hover { background: #333; }
+  .proto-bar .bar-label {
+    min-width: 176px; text-align: center; white-space: nowrap;
+    font-size: 11.5px; color: #e8e4da;
+  }
+  .proto-bar .bar-label b {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    color: #fff; margin-right: 3px;
+  }
+  .proto-bar .bar-hint {
+    color: #8f8a80; font: 500 9px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    padding: 0 8px 0 4px; white-space: nowrap;
+  }
+
+  /* --- review log --------------------------------------------------- */
+  .review-log {
+    max-width: 1320px; margin: 0 auto; padding: 0 32px 120px;
+  }
+  .review-log-box {
+    border-top: 1px solid #b8b2a5; padding-top: 20px;
+  }
+  .review-log h2 { font-size: 26px; line-height: 1.25; letter-spacing: -.02em; margin: 5px 0 14px; }
+  .log-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .log-grid > div { border: 1px solid #c9c4b8; background: #fbfaf6; padding: 13px 15px; }
+  .log-grid h3 { font-size: 12px; margin-bottom: 4px; }
+  .log-grid p { font-size: 11.5px; line-height: 1.65; color: #4a4740; }
+
+  /* --- responsive review -------------------------------------------- */
+  @media (max-width: 1080px) {
+    .screens { grid-template-columns: 1fr; }
+    .phone-frame { width: 390px; max-width: 100%; }
+    .moodboard { grid-template-columns: repeat(3, 1fr); }
+    .mood-tile:nth-child(4), .mood-tile:nth-child(5) { grid-column: span 1; }
+  }
+  @media (max-width: 860px) {
+    .review { padding: 54px 22px 10px; }
+    .dir { padding: 26px 22px 44px; }
+    .review-log { padding: 0 22px 110px; }
+    .brief-grid, .dir-index { grid-template-columns: 1fr; }
+    .recommend { grid-template-columns: 1fr; gap: 8px; }
+    .dir-head { grid-template-columns: 64px 1fr; gap: 14px; }
+    .dir-head-letter { font-size: 48px; }
+    .spec-grid { grid-template-columns: repeat(2, 1fr); }
+    .tradeoff { grid-template-columns: 1fr; }
+    .log-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .review { padding: 50px 14px 8px; }
+    .dir { padding: 22px 14px 40px; }
+    .review-log { padding: 0 14px 100px; }
+    .review h1 { font-size: 30px; }
+    .review-lede { font-size: 15px; }
+    .dir-head { grid-template-columns: 1fr; gap: 4px; }
+    .dir-head-letter { font-size: 38px; }
+    .spec-grid { grid-template-columns: 1fr; }
+    .moodboard { grid-template-columns: repeat(2, 1fr); }
+    .mood-tile { min-height: 140px; }
+    .phone-bezel { border-width: 6px; border-radius: 24px; }
+    .phone-screen { height: 780px; }
+    .proto-bar { bottom: 8px; gap: 0; padding: 5px 6px; }
+    .proto-bar .bar-label { min-width: 128px; font-size: 10.5px; }
+    .proto-bar .bar-hint { display: none; }
+    .system-head { display: block; }
+    .system-head p { margin-top: 3px; }
+    .desktop-frame { display: none; }
+    .system-wrap { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="proto-ribbon">PROTOTYPE · 一次性 · 视觉方向</div>
+
+<header class="review">
+  <p class="review-kicker">Wayfinder · 视觉方向 · 2026-11-06</p>
+  <h1>同一套文案，三种视觉语言</h1>
+  <p class="review-lede">要定的是：页面第一眼应该像什么。三个方向都遵守已定的首屏约束——不放 hero 大图、不放客户 logo、单一主 CTA；差别在气质、排版、图像语言与信息密度。</p>
+
+  <details class="review-brief" open>
+    <summary>先读：这张原型要定什么，怎么评</summary>
+    <div class="brief-grid">
+      <div>
+        <h2>票上的问题</h2>
+        <p>页面应该长什么样？给出 2–3 个视觉方向（情绪板 + 首屏粗样），说明气质、适合谁、色彩 / 字体 / 图像 / 留白、移动端可读性、实现成本，最后给推荐。</p>
+      </div>
+      <div>
+        <h2>已定，不在本票重开</h2>
+        <p>首屏只放 eyebrow、H1、副标题、主 CTA、次 CTA、一行信任；无 hero 大图；两页结构；公开价格；零案例证明；单一 CTA。文案用 8 号票定稿的关键句，逐屏文案在 16 号票。</p>
+      </div>
+      <div>
+        <h2>怎么评</h2>
+        <p>1）先看 5 秒气质：像不像你会信任的供应商。2）再看手机框 844px 折叠线内：H1、副标题、CTA、信任条是否完整。3）看系统样张：报价 / 本体图 / 证明能不能撑住。4）记下想混搭的部分。</p>
+      </div>
+    </div>
+    <p class="review-note">这不是最终视觉稿：颜色、字号、间距会在选定后精修；不包含 logo、摄影、插画、动效的最终制作。原型只用于讨论。想并排比较，可以开三个标签页：<b>?variant=A</b> / <b>?variant=B</b> / <b>?variant=C</b>。</p>
+  </details>
+
+  <div class="dir-index" role="group" aria-label="三个视觉方向">
+    <button type="button" class="dir-card active" data-jump="A">
+      <span class="dir-letter">A</span>
+      <span class="dir-name">编辑部 · 判断书</span>
+      <span class="dir-line">像一份公开的判断书</span>
+      <span class="dir-tags">可信 · 克制 · 文字驱动</span>
+      <span class="dir-cost">实现成本：低</span>
+    </button>
+    <button type="button" class="dir-card" data-jump="B">
+      <span class="dir-letter">B</span>
+      <span class="dir-name">结构图纸</span>
+      <span class="dir-line">像一张可读的工程图纸</span>
+      <span class="dir-tags">精确 · 工程 · 图驱动</span>
+      <span class="dir-cost">实现成本：中</span>
+    </button>
+    <button type="button" class="dir-card" data-jump="C">
+      <span class="dir-letter">C</span>
+      <span class="dir-name">案头顾问 · 便签</span>
+      <span class="dir-line">像一张桌上的顾问便签</span>
+      <span class="dir-tags">直接 · 温暖 · 触感</span>
+      <span class="dir-cost">实现成本：低–中</span>
+    </button>
+  </div>
+
+  <div class="recommend">
+    <p class="review-kicker">我的建议</p>
+    <p><b>A 做主系统</b>；B 的本体图只进 <code>/method</code>；C 的便签与直白语气只进证明 / 团队区。理由：A 最能把「先理知识结构」讲成判断力，成本最低、移动端最稳；B 的图纸语法在方法页是资产，在首屏会变成技术炫耀；C 的暖度适合拆「小团队靠不靠得住」，但不适合撑 12–15 万的报价。</p>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================ DIRECTION A ============================ -->
+<section class="dir dir-a active" data-dir="A">
+  <header class="dir-head">
+    <div class="dir-head-letter">A</div>
+    <div>
+      <p class="review-kicker">Direction A</p>
+      <h2>编辑部 · 判断书</h2>
+      <p class="dir-desc">把页面做成一份可读的判断书：宋体标题、细规则线、大量留白，先让人看到「我们有判断」，再看到「我们会 AI」。它假设访客对 AI 话术已经疲惫，愿意先读一段清楚的判断。</p>
+    </div>
+  </header>
+
+  <dl class="spec-grid">
+    <div class="spec-cell"><dt>气质</dt><dd>可信 / 克制 / 有判断 / 纸面感</dd></div>
+    <div class="spec-cell"><dt>适合谁</dt><dd>对 AI 话术警惕、想先看判断依据的业务 / IT 负责人；老板扫一眼不觉得浮夸。</dd></div>
+    <div class="spec-cell"><dt>色彩</dt><dd>纸白 <b>#FBF8F1</b> · 墨 <b>#17140E</b> · 赭石 <b>#8E3B24</b> · 暖灰 <b>#6C6558</b> · 细线 <b>#DCD3C2</b></dd></div>
+    <div class="spec-cell"><dt>字体</dt><dd>标题：宋体（思源宋体 / Songti）700；正文：苹方 / 思源黑体 400；数字：Georgia / tabular。</dd></div>
+    <div class="spec-cell"><dt>图像</dt><dd>无摄影、无 3D；只用规则线、少量 SVG 线描和方形印章式标记。</dd></div>
+    <div class="spec-cell"><dt>留白</dt><dd>高。首屏留白 ≥45%；每屏只有一个视觉焦点。</dd></div>
+    <div class="spec-cell"><dt>移动端 / 微信</dt><dd>H1 37px 宋体 700；正文 13px；CTA 48px；信任条拆三行；不用横向滚动；标题加深，避免低端 Android 上细宋发灰。</dd></div>
+    <div class="spec-cell"><dt>实现成本</dt><dd>低。CSS 排版 + 1 个 SVG；中文宋体子集化 0.5–1 天；无插画 / 动效。</dd></div>
+    <div class="spec-cell"><dt>主要风险</dt><dd>宋体落不到思源时会被 SimSun 拉旧；整体偏「咨询公司」，需要价格表与样例把它拉回生意。</dd></div>
+  </dl>
+
+  <div class="moodboard">
+    <div class="mood-tile">
+      <div class="mood-swatches">
+        <span class="mood-swatch" style="background:#FBF8F1" data-hex="#FBF8F1"></span>
+        <span class="mood-swatch" style="background:#17140E" data-hex="#17140E"></span>
+        <span class="mood-swatch" style="background:#8E3B24" data-hex="#8E3B24"></span>
+        <span class="mood-swatch" style="background:#6C6558" data-hex="#6C6558"></span>
+        <span class="mood-swatch" style="background:#DCD3C2" data-hex="#DCD3C2"></span>
+      </div>
+      <div class="mood-palette-names">
+        <span>纸白</span><span>墨</span><span>赭石</span><span>暖灰</span><span>细线</span>
+      </div>
+      <div class="mood-cap">01 / 色板 · 纸、墨、赭石</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-type">
+        <p class="mt-small">标题 / 宋体 700</p>
+        <p class="mt-display">先理知识结构</p>
+        <p class="mt-display2">再交付 Agent</p>
+        <p class="mt-body">正文 / 苹方 400 · 让企业知识库答得准、用得上。</p>
+      </div>
+      <div class="mood-cap">02 / 字样 · 宋体标题 + 黑体正文</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-texture">
+        <span class="rule"></span>
+        <span class="mood-seal">序构</span>
+        <span class="paper-note">纸 / 规则线 / 印章</span>
+      </div>
+      <div class="mood-cap">03 / 材质 · 纸面、细线、一枚小印章</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-ref">
+        <p class="ref-label">气质参照</p>
+        <p>财经特稿</p>
+        <p>咨询备忘录</p>
+        <p>学术出版物</p>
+      </div>
+      <div class="mood-cap">04 / 参照 · 不是抄版式</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-avoid">
+        <p class="ref-label">避免</p>
+        <p>渐变科技蓝</p>
+        <p>3D 机器人</p>
+        <p>客户 logo 墙</p>
+      </div>
+      <div class="mood-cap">05 / 反向清单</div>
+    </div>
+  </div>
+
+  <div class="screens">
+    <figure class="desktop-frame">
+      <div class="browser-bar">
+        <span class="browser-dots"><i></i><i></i><i></i></span>
+        <span class="browser-url">xugou.ai</span>
+        <span class="browser-tag">首屏 · 桌面</span>
+      </div>
+      <div class="a-mock">
+        <header class="a-nav">
+          <span class="a-brand">序构 AI</span>
+          <span class="a-nav-links"><span>适用场景</span><span>报价</span><span>证明</span><span>方法</span></span>
+          <button type="button" class="a-nav-cta">预约诊断</button>
+        </header>
+        <section class="a-hero">
+          <div class="a-ghost" aria-hidden="true">01</div>
+          <div class="a-kicker"><p class="a-eyebrow">企业知识库 / 智能体落地服务商</p></div>
+          <h1 class="a-h1">先理知识结构，<br>再交付 <span class="a-latin">Agent</span></h1>
+          <p class="a-lede">让企业知识库答得准、用得上。面向已经上了知识库 / RAG，却答不准的 50–300 人企业。</p>
+          <div class="a-cta-row">
+            <button type="button" class="a-btn">预约 30 分钟场景诊断</button>
+            <span class="a-link">先看方法论</span>
+          </div>
+          <p class="a-micro">不加表单，直接约；1 个工作日内回复。</p>
+          <p class="a-trust">诊断有交付物 · 价格公开 · 验收 30–50 题 / ≥80% / 零关键错误</p>
+        </section>
+      </div>
+      <figcaption class="fold-note"><span>桌面 · 1440 视口缩略</span><span>首屏无大图，文字承担全部说服</span></figcaption>
+    </figure>
+
+    <figure class="phone-frame">
+      <div class="phone-bezel">
+        <div class="wechat-bar">
+          <span class="wechat-left">‹</span>
+          <span class="wechat-title">序构 AI</span>
+          <span class="wechat-right">···</span>
+        </div>
+        <div class="phone-screen">
+          <div class="a-mock a-phone">
+            <header class="a-nav">
+              <span class="a-brand">序构 AI</span>
+              <button type="button" class="a-nav-cta">预约诊断</button>
+            </header>
+            <section class="a-hero">
+              <div class="a-ghost" aria-hidden="true">01</div>
+              <div class="a-kicker"><p class="a-eyebrow">企业知识库 / 智能体落地服务商</p></div>
+              <h1 class="a-h1">先理知识结构，<br>再交付 <span class="a-latin">Agent</span></h1>
+              <p class="a-lede">让企业知识库答得准、用得上。面向已经上了知识库 / RAG，却答不准的 50–300 人企业。</p>
+              <div class="a-cta-row">
+                <button type="button" class="a-btn">预约 30 分钟场景诊断</button>
+                <span class="a-link">先看方法论</span>
+              </div>
+              <p class="a-micro">不加表单，直接约；1 个工作日内回复。</p>
+              <p class="a-trust">诊断有交付物 · 价格公开 · 验收 30–50 题 / ≥80% / 零关键错误</p>
+              <div style="margin-top:24px; border-top:1px solid #DCD3C2; padding:11px 0 2px; display:flex; justify-content:space-between; font:500 9px/1.5 ui-monospace,Menlo,monospace; letter-spacing:.06em; color:#6C6558;"><span>↓ 向下</span><span>适用场景</span></div>
+            </section>
+          </div>
+        </div>
+      </div>
+      <figcaption class="fold-note"><span>微信内 · 390 × 844</span><span>框内即首屏折叠线</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="system-head">
+    <h3>系统样张 · 报价</h3>
+    <p>同一方向下，最考验「判断力」的一块</p>
+  </div>
+  <div class="system-wrap">
+    <div class="a-mock">
+      <div class="a-system">
+        <div class="a-kicker"><p class="a-eyebrow">Offer · 04</p></div>
+        <h4 class="a-system-h">四条 Offer，价格写在页面上</h4>
+        <p class="a-system-lede">从免费诊断开始。不需要先买一个大项目，也不卖「试点」。</p>
+        <table class="a-table">
+          <thead>
+            <tr><th>类型</th><th>Offer</th><th>价格</th><th>周期</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>入口</td>
+              <td><b>场景诊断</b><span class="a-sub">30 分钟 + 书面纪要</span></td>
+              <td class="a-price">免费</td>
+              <td>30 分钟</td>
+              <td class="a-act"><span>预约 →</span></td>
+            </tr>
+            <tr>
+              <td>可独立</td>
+              <td><b>知识结构梳理</b><span class="a-sub">本体图 / 知识清单</span></td>
+              <td class="a-price">¥5–8 万</td>
+              <td>2–4 周</td>
+              <td class="a-act"><span>先聊边界 →</span></td>
+            </tr>
+            <tr>
+              <td>主项目</td>
+              <td><b>Agent 项目 · 单场景</b><span class="a-sub">搭建 / 评测 / 上线</span></td>
+              <td class="a-price">¥12–15 万</td>
+              <td>4–8 周</td>
+              <td class="a-act"><span>预约诊断 →</span></td>
+            </tr>
+            <tr>
+              <td>可选</td>
+              <td><b>月度保障</b><span class="a-sub">监控 / 调优 / 小更新</span></td>
+              <td class="a-price">¥5,000–10,000</td>
+              <td>按月</td>
+              <td class="a-act"><span>了解保障 →</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="a-footnote">含税可开票；模型 API 与云资源按实际用量代付，不赚差价；最终报价以诊断后书面范围为准；报价 30 天有效。三阶段付款与验收标准见方法页。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tradeoff">
+    <div><h4>选它，如果你…</h4><p>想让页面先证明判断力，而不是先证明会用 AI；接受低图像、强文字；希望报价像一份公开备忘录。</p></div>
+    <div><h4>代价</h4><p>宋体在 Windows 上可能落到 SimSun；整体偏静，冷流量需要靠文案和价格表撑住注意力；摄影与插画几乎不参与。</p></div>
+    <div><h4>成本备注</h4><p>排版 + 1 个 SVG；中文宋体子集化 0.5–1 天；无动效。是三个方向里最快能上线的一套。</p></div>
+  </div>
+</section>
+
+<!-- ============================ DIRECTION B ============================ -->
+<section class="dir dir-b" data-dir="B">
+  <header class="dir-head">
+    <div class="dir-head-letter">B</div>
+    <div>
+      <p class="review-kicker">Direction B</p>
+      <h2>结构图纸</h2>
+      <p class="dir-desc">把页面做成一张可读的工程图纸：网格、坐标、等宽标注和一张本体图，把「先理知识结构」变成看得见的方法。它假设访客有技术背景，想确认你不是套模板，而是真的懂知识层。</p>
+    </div>
+  </header>
+
+  <dl class="spec-grid">
+    <div class="spec-cell"><dt>气质</dt><dd>精确 / 工程 / 可检查 / 有底牌</dd></div>
+    <div class="spec-cell"><dt>适合谁</dt><dd>有 IT / 数据背景的 AI 项目负责人；需要向老板解释「这件事有章法」的人。</dd></div>
+    <div class="spec-cell"><dt>色彩</dt><dd>工程纸 <b>#EEF1ED</b> · 墨 <b>#0D1B18</b> · 松绿 <b>#1F4D45</b> · 朱砂 <b>#D4552F</b> · 网格 <b>#C7D2CC</b></dd></div>
+    <div class="spec-cell"><dt>字体</dt><dd>标题：苹方 / 思源黑体 650；标注：等宽（SF Mono / IBM Plex Mono / Consolas）；数字等宽。</dd></div>
+    <div class="spec-cell"><dt>图像</dt><dd>无摄影；本体图（对象 / 关系 / 规则 / 权限）是主要视觉资产；网格、坐标、图号、版本号是装饰语言。</dd></div>
+    <div class="spec-cell"><dt>留白</dt><dd>中。信息密度高，但用网格和层级控制；首屏背景网格很淡，不抢文字。</dd></div>
+    <div class="spec-cell"><dt>移动端 / 微信</dt><dd>网格降到 4 栏、坐标标注减半；H1 35px；本体图在方法页横向滑动并给出提示；首屏不放大图，避免 CTA 下沉；等宽标注 ≥12px。</dd></div>
+    <div class="spec-cell"><dt>实现成本</dt><dd>中。网格系统 + SVG 本体图 + 图注组件（约 2–3 天）；无摄影 / 3D；维护成本中等。</dd></div>
+    <div class="spec-cell"><dt>主要风险</dt><dd>容易变成技术炫耀，业务读者看不懂；必须把每个节点翻译成业务语言；蓝图纸感太强会显冷，需保留暖纸色。</dd></div>
+  </dl>
+
+  <div class="moodboard">
+    <div class="mood-tile">
+      <div class="mood-swatches">
+        <span class="mood-swatch" style="background:#EEF1ED" data-hex="#EEF1ED"></span>
+        <span class="mood-swatch" style="background:#0D1B18" data-hex="#0D1B18"></span>
+        <span class="mood-swatch" style="background:#1F4D45" data-hex="#1F4D45"></span>
+        <span class="mood-swatch" style="background:#D4552F" data-hex="#D4552F"></span>
+        <span class="mood-swatch" style="background:#C7D2CC" data-hex="#C7D2CC"></span>
+      </div>
+      <div class="mood-palette-names">
+        <span>工程纸</span><span>墨</span><span>松绿</span><span>朱砂</span><span>网格</span>
+      </div>
+      <div class="mood-cap">01 / 色板 · 工程纸、松绿、朱砂</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-type">
+        <p class="mt-small">标题 / 黑体 650</p>
+        <p class="mt-display">先理知识结构</p>
+        <p class="mt-display2">再交付 Agent</p>
+        <p class="mt-body">MONO / 30–50 题 / ≥80% / 零关键错误</p>
+      </div>
+      <div class="mood-cap">02 / 字样 · 黑体标题 + 等宽标注</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-texture">
+        <span class="mood-crosshair"></span>
+        <span class="mood-fig-label">FIG. 01 / 十字准线</span>
+      </div>
+      <div class="mood-cap">03 / 材质 · 网格、准线、图号</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-ref">
+        <p class="ref-label">气质参照</p>
+        <p>技术图纸</p>
+        <p>标准规范</p>
+        <p>工业手册</p>
+      </div>
+      <div class="mood-cap">04 / 参照 · 不是抄版式</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-avoid">
+        <p class="ref-label">避免</p>
+        <p>赛博朋克</p>
+        <p>电路板纹理</p>
+        <p>蓝色渐变</p>
+      </div>
+      <div class="mood-cap">05 / 反向清单</div>
+    </div>
+  </div>
+
+  <div class="screens">
+    <figure class="desktop-frame">
+      <div class="browser-bar">
+        <span class="browser-dots"><i></i><i></i><i></i></span>
+        <span class="browser-url">xugou.ai</span>
+        <span class="browser-tag">首屏 · 桌面</span>
+      </div>
+      <div class="b-mock">
+        <header class="b-nav">
+          <span class="b-brand">序构 AI <span>XUGOU / 2026</span></span>
+          <span class="b-nav-mid">企业知识库 / 智能体落地服务商</span>
+          <button type="button" class="b-nav-cta">预约诊断 ↗</button>
+        </header>
+        <div class="b-specbar"><span>FIG. 01 — HOME / 首屏</span><span>1440 / 390</span><span>REV. 2026.11</span></div>
+        <section class="b-hero">
+          <div class="b-figure" aria-hidden="true">
+            <svg viewBox="0 0 300 260" fill="none">
+              <rect x="26" y="26" width="248" height="208" stroke="#1F4D45" stroke-dasharray="4 4" opacity=".45"/>
+              <rect x="52" y="40" width="60" height="26" stroke="#1F4D45"/>
+              <text x="82" y="57" text-anchor="middle" fill="#1F4D45" font-family="ui-monospace, Menlo, monospace" font-size="9">客户</text>
+              <rect x="188" y="40" width="60" height="26" stroke="#1F4D45"/>
+              <text x="218" y="57" text-anchor="middle" fill="#1F4D45" font-family="ui-monospace, Menlo, monospace" font-size="9">合同</text>
+              <rect x="52" y="112" width="60" height="26" stroke="#1F4D45"/>
+              <text x="82" y="129" text-anchor="middle" fill="#1F4D45" font-family="ui-monospace, Menlo, monospace" font-size="9">工单</text>
+              <rect x="188" y="112" width="76" height="26" stroke="#1F4D45"/>
+              <text x="226" y="129" text-anchor="middle" fill="#1F4D45" font-family="ui-monospace, Menlo, monospace" font-size="9">知识条目</text>
+              <rect x="120" y="184" width="60" height="26" stroke="#1F4D45"/>
+              <text x="150" y="201" text-anchor="middle" fill="#1F4D45" font-family="ui-monospace, Menlo, monospace" font-size="9">规则</text>
+              <path d="M112 53 H188" stroke="#1F4D45"/>
+              <text x="150" y="48" text-anchor="middle" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">签订</text>
+              <path d="M218 66 V112" stroke="#1F4D45"/>
+              <path d="M82 66 V112" stroke="#1F4D45"/>
+              <path d="M112 125 H188" stroke="#1F4D45"/>
+              <path d="M150 184 V138" stroke="#1F4D45"/>
+              <path d="M226 138 V184 H180" stroke="#1F4D45"/>
+              <circle cx="262" cy="70" r="4" fill="#D4552F"/>
+              <text x="262" y="86" text-anchor="middle" fill="#D4552F" font-family="ui-monospace, Menlo, monospace" font-size="7">越界</text>
+              <text x="34" y="38" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">可答范围</text>
+            </svg>
+          </div>
+          <p class="b-eyebrow">企业知识库 / 智能体落地服务商</p>
+          <h1 class="b-h1">先理知识结构，<br>再交付 Agent</h1>
+          <p class="b-lede">让企业知识库答得准、用得上。面向已经上了知识库 / RAG，却答不准的 50–300 人企业。</p>
+          <div class="b-cta-row">
+            <button type="button" class="b-btn">预约 30 分钟场景诊断</button>
+            <span class="b-link">先看方法论 →</span>
+          </div>
+          <p class="b-micro">不加表单，直接约；1 个工作日内回复。</p>
+          <div class="b-trust">
+            <div class="b-trust-row"><span class="idx">01</span><span class="lab">诊断</span><span class="val">诊断有交付物</span></div>
+            <div class="b-trust-row"><span class="idx">02</span><span class="lab">价格</span><span class="val">价格公开</span></div>
+            <div class="b-trust-row"><span class="idx">03</span><span class="lab">验收</span><span class="val">验收 30–50 题 / ≥80% / 零关键错误</span></div>
+          </div>
+        </section>
+      </div>
+      <figcaption class="fold-note"><span>桌面 · 1440 视口缩略</span><span>网格是背景，不承载新信息</span></figcaption>
+    </figure>
+
+    <figure class="phone-frame">
+      <div class="phone-bezel">
+        <div class="wechat-bar">
+          <span class="wechat-left">‹</span>
+          <span class="wechat-title">序构 AI</span>
+          <span class="wechat-right">···</span>
+        </div>
+        <div class="phone-screen">
+          <div class="b-mock b-phone">
+            <header class="b-nav">
+              <span class="b-brand">序构 AI <span>XUGOU</span></span>
+              <button type="button" class="b-nav-cta">预约 ↗</button>
+            </header>
+            <div class="b-specbar"><span>FIG. 01 / HOME</span><span>390 × 844</span></div>
+            <section class="b-hero">
+              <p class="b-eyebrow">企业知识库 / 智能体落地服务商</p>
+              <h1 class="b-h1">先理知识结构，<br>再交付 Agent</h1>
+              <p class="b-lede">让企业知识库答得准、用得上。面向已经上了知识库 / RAG，却答不准的 50–300 人企业。</p>
+              <div class="b-cta-row">
+                <button type="button" class="b-btn">预约 30 分钟场景诊断</button>
+                <span class="b-link">先看方法论 →</span>
+              </div>
+              <p class="b-micro">不加表单，直接约；1 个工作日内回复。</p>
+              <div class="b-trust">
+                <div class="b-trust-row"><span class="idx">01</span><span class="lab">诊断</span><span class="val">诊断有交付物</span></div>
+                <div class="b-trust-row"><span class="idx">02</span><span class="lab">价格</span><span class="val">价格公开</span></div>
+                <div class="b-trust-row"><span class="idx">03</span><span class="lab">验收</span><span class="val">验收 30–50 题 / ≥80% / 零关键错误</span></div>
+              </div>
+              <div style="margin-top:16px; border-top:1px solid #0D1B18; padding:9px 0 2px; display:flex; justify-content:space-between; font:500 8px/1.5 ui-monospace,Menlo,monospace; letter-spacing:.08em; color:#5E6E67; text-transform:uppercase;"><span>↓ 02 / 适用场景</span><span>继续</span></div>
+            </section>
+          </div>
+        </div>
+      </div>
+      <figcaption class="fold-note"><span>微信内 · 390 × 844</span><span>框内即首屏折叠线</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="system-head">
+    <h3>系统样张 · 本体图</h3>
+    <p>同一方向下，最能把「知识结构」变成资产的一块</p>
+  </div>
+  <div class="system-wrap">
+    <div class="b-mock">
+      <div class="b-system">
+        <p class="b-eyebrow">知识结构 · M2</p>
+        <h4 class="b-system-h">对象、关系、规则、权限</h4>
+        <p class="b-system-lede">一张能拿来讨论、能验收的图。Agent 的答案好坏，取决于这张图是否清楚。</p>
+        <div class="b-fig-wrap">
+          <svg viewBox="0 0 760 300" fill="none" role="img" aria-label="一个业务域的本体图：客户、合同、产品、工单、知识条目、规则、权限、评测题，以及越界拒答">
+            <rect x="22" y="22" width="548" height="256" stroke="#1F4D45" stroke-dasharray="5 5" opacity=".35"/>
+            <text x="30" y="16" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="8">可答范围 / ANSWERABLE</text>
+
+            <rect x="48" y="44" width="88" height="28" stroke="#1F4D45"/>
+            <text x="92" y="62" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">客户</text>
+            <rect x="208" y="44" width="88" height="28" stroke="#1F4D45"/>
+            <text x="252" y="62" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">合同</text>
+            <rect x="368" y="44" width="88" height="28" stroke="#1F4D45"/>
+            <text x="412" y="62" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">产品</text>
+
+            <rect x="48" y="124" width="88" height="28" stroke="#1F4D45"/>
+            <text x="92" y="142" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">工单</text>
+            <rect x="208" y="124" width="112" height="28" stroke="#1F4D45"/>
+            <text x="264" y="142" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">知识条目</text>
+            <rect x="372" y="124" width="88" height="28" stroke="#1F4D45"/>
+            <text x="416" y="142" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">规则</text>
+
+            <rect x="48" y="204" width="88" height="28" stroke="#1F4D45"/>
+            <text x="92" y="222" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">权限</text>
+            <rect x="208" y="204" width="112" height="28" stroke="#1F4D45"/>
+            <text x="264" y="222" text-anchor="middle" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="10">评测题</text>
+
+            <rect x="600" y="124" width="112" height="28" stroke="#D4552F"/>
+            <text x="656" y="142" text-anchor="middle" fill="#D4552F" font-family="ui-monospace, Menlo, monospace" font-size="9">越界 / 拒答</text>
+
+            <path d="M136 58 H208" stroke="#1F4D45"/>
+            <text x="172" y="50" text-anchor="middle" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">签订</text>
+            <path d="M296 58 H368" stroke="#1F4D45"/>
+            <text x="332" y="50" text-anchor="middle" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">包含</text>
+            <path d="M92 72 V124" stroke="#1F4D45"/>
+            <text x="96" y="102" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">触发</text>
+            <path d="M136 138 H208" stroke="#1F4D45"/>
+            <text x="172" y="130" text-anchor="middle" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">引用</text>
+            <path d="M252 72 V124" stroke="#1F4D45"/>
+            <text x="256" y="102" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">约束</text>
+            <path d="M92 152 V204" stroke="#1F4D45"/>
+            <text x="96" y="182" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">控制</text>
+            <path d="M264 152 V204" stroke="#1F4D45"/>
+            <text x="268" y="182" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">验证</text>
+            <path d="M320 138 H372" stroke="#1F4D45"/>
+            <text x="346" y="130" text-anchor="middle" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="7">校验</text>
+
+            <path d="M264 124 V96 H652 V124" stroke="#D4552F" stroke-dasharray="4 3"/>
+            <text x="470" y="90" text-anchor="middle" fill="#D4552F" font-family="ui-monospace, Menlo, monospace" font-size="7">不可答 / 越界</text>
+
+            <g transform="translate(600, 190)">
+              <text x="0" y="0" fill="#5E6E67" font-family="ui-monospace, Menlo, monospace" font-size="8" letter-spacing="1">图例 / LEGEND</text>
+              <text x="0" y="16" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="7">□ 对象 / 节点</text>
+              <text x="0" y="30" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="7">→ 关系（有向）</text>
+              <text x="0" y="44" fill="#0D1B18" font-family="ui-monospace, Menlo, monospace" font-size="7">┄ 可答边界</text>
+              <text x="0" y="58" fill="#D4552F" font-family="ui-monospace, Menlo, monospace" font-size="7">✕ 越界 / 拒答</text>
+            </g>
+          </svg>
+        </div>
+        <div class="b-fig-cap"><span>FIG. 02 — 一个业务域的本体图</span><span>对象 / 关系 / 规则 / 权限</span></div>
+        <div class="b-steps">
+          <div class="b-step"><span class="num">01</span><h4>对象与关系</h4><p>业务里的「谁、什么、和谁有关」。</p></div>
+          <div class="b-step"><span class="num">02</span><h4>规则与边界</h4><p>什么能答、什么不能答、谁有权限。</p></div>
+          <div class="b-step"><span class="num">03</span><h4>评测与迭代</h4><p>30–50 题验收，缺口回到知识层补。</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tradeoff">
+    <div><h4>选它，如果你…</h4><p>想把「本体 / 知识结构」做成可见的差异化资产，并接受更高的设计与实现成本。</p></div>
+    <div><h4>代价</h4><p>图会随内容变，维护成本高于 A；业务读者可能被图吓到；移动端必须做降级，否则首屏会变长。</p></div>
+    <div><h4>成本备注</h4><p>网格 + SVG 本体图 + 图注组件约 2–3 天；无摄影 / 3D；需要一位能画信息图的设计师。</p></div>
+  </div>
+</section>
+
+<!-- ============================ DIRECTION C ============================ -->
+<style>
+  .dir-c .c-stamp {
+    position: absolute; top: 18px; right: 18px;
+    border: 1px solid var(--c-accent); color: var(--c-accent);
+    font: 700 7px/1.2 var(--c-mono); letter-spacing: .1em;
+    padding: 4px 5px; transform: rotate(6deg); opacity: .8;
+  }
+  .dir-c .c-phone .c-stamp { top: 12px; right: 12px; font-size: 6px; padding: 3px 4px; }
+</style>
+<section class="dir dir-c" data-dir="C">
+  <header class="dir-head">
+    <div class="dir-head-letter">C</div>
+    <div>
+      <p class="review-kicker">Direction C</p>
+      <h2>案头顾问 · 便签</h2>
+      <p class="dir-desc">把页面做成一张放在桌上的顾问便签：暖纸色、粗黑标题、便签卡和印章式标签，把「小团队、直说、负责人亲自交付」变成触感。它假设访客被大厂和外包伤过，先要确认对面是具体的人。</p>
+    </div>
+  </header>
+
+  <dl class="spec-grid">
+    <div class="spec-cell"><dt>气质</dt><dd>直接 / 温暖 / 老练 / 不端着</dd></div>
+    <div class="spec-cell"><dt>适合谁</dt><dd>被大厂 / 外包伤过、怕被套路的业务负责人；老板在旁边看，觉得「这帮人说话实在」。</dd></div>
+    <div class="spec-cell"><dt>色彩</dt><dd>米纸 <b>#F8F0E1</b> · 墨 <b>#24201A</b> · 柿 <b>#C25B33</b> · 橄榄 <b>#6F7D5C</b> · 浅线 <b>#E2D3BD</b></dd></div>
+    <div class="spec-cell"><dt>字体</dt><dd>标题：苹方 / 思源黑体 750–800，紧字距；正文 16px / 1.8；强调用粗笔触下划线（CSS），不用手写体；数字等宽。</dd></div>
+    <div class="spec-cell"><dt>图像</dt><dd>无 stock photo；CSS 便签、胶带、印章、箭头线描；如果要摄影，只拍真实工作台 1 张，不拍团队合影。</dd></div>
+    <div class="spec-cell"><dt>留白</dt><dd>中。卡片之间有呼吸，但不空；首屏像一张桌面，不像一张海报。</dd></div>
+    <div class="spec-cell"><dt>移动端 / 微信</dt><dd>便签卡在 CTA 下方，不挡按钮；H1 33px；CTA 48px 胶囊；信任条改成标签，允许换行；避免大面积低对比米色发灰，正文用深墨。</dd></div>
+    <div class="spec-cell"><dt>实现成本</dt><dd>低–中。卡片 / 印章 / 胶带 CSS 约 1 天；若加 1 张真实工作台照片或线描插画 +1–2 天；无 3D / 动效。</dd></div>
+    <div class="spec-cell"><dt>主要风险</dt><dd>过度「亲切」会削弱 12–15 万项目的专业感；圆角与便签容易像模板；必须克制用色和装饰，靠文案的直白撑住。</dd></div>
+  </dl>
+
+  <div class="moodboard">
+    <div class="mood-tile">
+      <div class="mood-swatches">
+        <span class="mood-swatch" style="background:#F8F0E1" data-hex="#F8F0E1"></span>
+        <span class="mood-swatch" style="background:#24201A" data-hex="#24201A"></span>
+        <span class="mood-swatch" style="background:#C25B33" data-hex="#C25B33"></span>
+        <span class="mood-swatch" style="background:#6F7D5C" data-hex="#6F7D5C"></span>
+        <span class="mood-swatch" style="background:#E2D3BD" data-hex="#E2D3BD"></span>
+      </div>
+      <div class="mood-palette-names">
+        <span>米纸</span><span>墨</span><span>柿</span><span>橄榄</span><span>浅线</span>
+      </div>
+      <div class="mood-cap">01 / 色板 · 米纸、柿、橄榄</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-type">
+        <p class="mt-small">标题 / 黑体 800</p>
+        <p class="mt-display">先理知识结构</p>
+        <p class="mt-display2">再交付 <mark>Agent</mark></p>
+        <p class="mt-body">正文 / 16px / 1.8 · 让企业知识库答得准、用得上。</p>
+      </div>
+      <div class="mood-cap">02 / 字样 · 粗黑标题 + 笔触强调</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-texture">
+        <div class="mood-note">负责人亲自交付，<br>每季只接 2–3 个项目。<span class="mood-stamp">样例 · 非客户</span></div>
+      </div>
+      <div class="mood-cap">03 / 材质 · 便签、胶带、印章</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-ref">
+        <p class="ref-label">气质参照</p>
+        <p>案头备忘</p>
+        <p>印刷卡片</p>
+        <p>顾问手记</p>
+      </div>
+      <div class="mood-cap">04 / 参照 · 不是抄版式</div>
+    </div>
+    <div class="mood-tile">
+      <div class="mood-avoid">
+        <p class="ref-label">避免</p>
+        <p>朋友圈海报</p>
+        <p>手写体</p>
+        <p>Emoji / 3D 人物</p>
+      </div>
+      <div class="mood-cap">05 / 反向清单</div>
+    </div>
+  </div>
+
+  <div class="screens">
+    <figure class="desktop-frame">
+      <div class="browser-bar">
+        <span class="browser-dots"><i></i><i></i><i></i></span>
+        <span class="browser-url">xugou.ai</span>
+        <span class="browser-tag">首屏 · 桌面</span>
+      </div>
+      <div class="c-mock">
+        <header class="c-nav">
+          <span class="c-brand">序构 AI</span>
+          <span class="c-nav-links"><span>适用场景</span><span>报价</span><span>证明</span><span>方法</span></span>
+          <button type="button" class="c-nav-cta">预约诊断</button>
+        </header>
+        <div class="c-hero-wrap">
+          <div class="c-card">
+            <span class="c-stamp">序构 · 案头</span>
+            <span class="c-eyebrow">企业知识库 / 智能体落地服务商</span>
+            <h1 class="c-h1">先理<mark>知识结构</mark>，<br>再交付 Agent</h1>
+            <p class="c-lede">让企业知识库答得准、用得上。面向已经上了知识库 / RAG，却答不准的 50–300 人企业。</p>
+            <div class="c-cta-row">
+              <button type="button" class="c-btn">预约 30 分钟场景诊断</button>
+              <span class="c-link">先看方法论</span>
+            </div>
+            <p class="c-micro">不加表单，直接约；1 个工作日内回复。</p>
+            <div class="c-trust">
+              <span class="c-chip">诊断有交付物</span>
+              <span class="c-chip">价格公开</span>
+              <span class="c-trust-line">验收 30–50 题 / ≥80% / 零关键错误</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption class="fold-note"><span>桌面 · 1440 视口缩略</span><span>便签是容器，不是装饰贴纸</span></figcaption>
+    </figure>
+
+    <figure class="phone-frame">
+      <div class="phone-bezel">
+        <div class="wechat-bar">
+          <span class="wechat-left">‹</span>
+          <span class="wechat-title">序构 AI</span>
+          <span class="wechat-right">···</span>
+        </div>
+        <div class="phone-screen">
+          <div class="c-mock c-phone">
+            <header class="c-nav">
+              <span class="c-brand">序构 AI</span>
+              <button type="button" class="c-nav-cta">预约诊断</button>
+            </header>
+            <div class="c-hero-wrap">
+              <div class="c-card">
+                <span class="c-stamp">序构 · 案头</span>
+                <span class="c-eyebrow">企业知识库 / 智能体落地服务商</span>
+                <h1 class="c-h1">先理<mark>知识结构</mark>，<br>再交付 Agent</h1>
+                <p class="c-lede">让企业知识库答得准、用得上。面向已经上了知识库 / RAG，却答不准的 50–300 人企业。</p>
+                <div class="c-cta-row">
+                  <button type="button" class="c-btn">预约 30 分钟场景诊断</button>
+                  <span class="c-link">先看方法论</span>
+                </div>
+                <p class="c-micro">不加表单，直接约；1 个工作日内回复。</p>
+                <div class="c-trust">
+                  <span class="c-chip">诊断有交付物</span>
+                  <span class="c-chip">价格公开</span>
+                  <span class="c-trust-line">验收 30–50 题 / ≥80% / 零关键错误</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption class="fold-note"><span>微信内 · 390 × 844</span><span>框内即首屏折叠线</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="system-head">
+    <h3>系统样张 · 证明</h3>
+    <p>同一方向下，最需要「像个具体的人」的一块</p>
+  </div>
+  <div class="system-wrap">
+    <div class="c-mock">
+      <div class="c-system">
+        <span class="c-eyebrow">零案例下的证明</span>
+        <h4 class="c-system-h">没有客户 logo，就给你看交付物</h4>
+        <p class="c-system-lede">三份样例免留资下载，全部标注「样例 · 基于公开语料与虚构企业，非客户项目」。</p>
+        <div class="c-proof-list">
+          <div class="c-proof-row">
+            <span class="c-file">PDF</span>
+            <div><h4>诊断纪要样例</h4><p>知识缺口 · 候选 Agent · 报价范围 · 不建议做的判断</p></div>
+            <a href="#" onclick="return false;">免留资下载</a>
+          </div>
+          <div class="c-proof-row">
+            <span class="c-file">PDF</span>
+            <div><h4>本体图样例</h4><p>一个业务域的对象 / 关系 / 规则 / 权限</p></div>
+            <a href="#" onclick="return false;">免留资下载</a>
+          </div>
+          <div class="c-proof-row">
+            <span class="c-file">PDF</span>
+            <div><h4>评测报告样例</h4><p>30–50 题结构 · 评分口径 · 验收示例</p></div>
+            <a href="#" onclick="return false;">免留资下载</a>
+          </div>
+        </div>
+        <div class="c-note">
+          <p>负责人亲自交付，每季只接 2–3 个项目。项目由负责人从头跟到尾，不转手；出了问题找得到拍板的人；上线后 30 天保修。</p>
+          <p class="c-sig">— 负责人 / 不公开人数</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tradeoff">
+    <div><h4>选它，如果你…</h4><p>想先降低戒备、让「负责人亲自交付」变得可信；接受少一点「前沿感」，多一点人的温度。</p></div>
+    <div><h4>代价</h4><p>过度亲切会削弱 12–15 万项目的专业感；圆角与便签容易像模板；必须克制装饰，靠文案的直白撑住。</p></div>
+    <div><h4>成本备注</h4><p>卡片 / 印章 / 胶带 CSS 约 1 天；若加 1 张真实工作台照片或线描插画 +1–2 天；无 3D / 动效。</p></div>
+  </div>
+</section>
+
+</main>
+
+<section class="review-log">
+  <div class="review-log-box">
+    <p class="review-kicker">Review log</p>
+    <h2>你更想往哪个方向走？</h2>
+    <div class="log-grid">
+      <div><h3>选一个</h3><p>A / B / C / 混搭（例如 A 的排版 + B 的图 + C 的暖度）</p></div>
+      <div><h3>哪一屏让你犹豫？</h3><p>首屏 / 报价 / 本体图 / 证明</p></div>
+      <div><h3>有没有你讨厌的元素？</h3><p>宋体、网格、便签、颜色、密度……</p></div>
+    </div>
+    <p class="review-note">把答案发给我，我记录到票上；选定后再做精修与资产清单。这张原型不会合并进主分支。</p>
+  </div>
+</section>
+
+<div class="proto-bar" role="group" aria-label="切换视觉方向">
+  <button type="button" data-step="-1" aria-label="上一个方向">←</button>
+  <span class="bar-label"><b>A</b> 编辑部 · 判断书</span>
+  <button type="button" data-step="1" aria-label="下一个方向">→</button>
+  <span class="bar-hint">← → 切换 · 同一套文案</span>
+</div>
+
+<style>
+  .phone-screen > .a-mock,
+  .phone-screen > .b-mock,
+  .phone-screen > .c-mock { min-height: 100%; }
+</style>
+
+<script>
+  (function () {
+    var variants = ['A', 'B', 'C'];
+    var names = { A: '编辑部 · 判断书', B: '结构图纸', C: '案头顾问 · 便签' };
+    var label = document.querySelector('.bar-label');
+    var current = 'A';
+
+    function setVariant(next, options) {
+      var opts = options || {};
+      if (variants.indexOf(next) === -1) next = 'A';
+      current = next;
+      document.querySelectorAll('.dir').forEach(function (section) {
+        section.classList.toggle('active', section.dataset.dir === next);
+      });
+      document.querySelectorAll('.dir-card').forEach(function (card) {
+        card.classList.toggle('active', card.dataset.jump === next);
+      });
+      label.innerHTML = '<b>' + next + '</b> ' + names[next];
+      var url = new URL(window.location.href);
+      url.searchParams.set('variant', next);
+      history.replaceState(null, '', url);
+      if (opts.scroll) {
+        var active = document.querySelector('.dir.active');
+        if (active) active.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    document.querySelectorAll('[data-jump]').forEach(function (card) {
+      card.addEventListener('click', function () {
+        setVariant(card.dataset.jump, { scroll: true });
+      });
+    });
+
+    document.querySelectorAll('[data-step]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var step = Number(button.dataset.step);
+        var index = (variants.indexOf(current) + step + variants.length) % variants.length;
+        setVariant(variants[index], { scroll: true });
+      });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      var active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      event.preventDefault();
+      var step = event.key === 'ArrowRight' ? 1 : -1;
+      var index = (variants.indexOf(current) + step + variants.length) % variants.length;
+      setVariant(variants[index], { scroll: true });
+    });
+
+    var initial = new URLSearchParams(window.location.search).get('variant');
+    setVariant(initial || 'A', { scroll: false });
+  })();
+</script>
+
+</body>
+</html>
